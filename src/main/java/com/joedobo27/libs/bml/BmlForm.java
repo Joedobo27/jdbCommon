@@ -1,4 +1,4 @@
-package com.joedobo27.libs;
+package com.joedobo27.libs.bml;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class BmlForm {
-    private static Logger logger;
+    private static final Logger logger;
     private final StringBuffer buf = new StringBuffer();
     private static final String tabs = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
@@ -23,6 +23,7 @@ public class BmlForm {
     private int openHarrays = 0;
 
     private int indentNum = 0;
+    @SuppressWarnings("CanBeFinal")
     private boolean beautify = false;
 
     private boolean closeDefault = false;

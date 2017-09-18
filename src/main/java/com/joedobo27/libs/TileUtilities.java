@@ -2,13 +2,17 @@ package com.joedobo27.libs;
 
 
 import com.wurmonline.math.TilePos;
+import com.wurmonline.mesh.BushData;
 import com.wurmonline.mesh.Tiles;
+import com.wurmonline.mesh.TreeData;
 import com.wurmonline.server.Server;
 import com.wurmonline.server.creatures.Creature;
 import com.wurmonline.server.zones.NoSuchZoneException;
 import com.wurmonline.server.zones.Zone;
 import com.wurmonline.server.zones.Zones;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Arrays;
 
 /**
  * Don't make a tile instance for every tile on the map. Just use this as a wrapper around the various WU tile interaction methods.
@@ -20,45 +24,26 @@ public class TileUtilities {
         int i = 1;
     }
 
-    public static TilePos getPerformerNearestTile(Creature performer) {
-        final float METERS_PER_TILE = 4F;
-        int tileX = Math.round(performer.getPosX() / METERS_PER_TILE);
-        int tileY = Math.round(performer.getPosY() / METERS_PER_TILE);
-        return TilePos.fromXY(tileX, tileY);
-    }
-
-    public static TilePos getPerformerOccupiedTile(Creature performer) {
-        final int METERS_PER_TILE = 4;
-        int tileX = (int)(performer.getPosX() / METERS_PER_TILE);
-        int tileY = (int)(performer.getPosY() / METERS_PER_TILE);
-        return TilePos.fromXY(tileX, tileY);
-    }
-
-    public static boolean isTargetedSurfaceRock(int encodedTile){
-        return Tiles.decodeType(encodedTile) == Tiles.Tile.TILE_ROCK.id || Tiles.decodeType(encodedTile) == Tiles.Tile.TILE_CLIFF.id;
-    }
-
-    public static boolean isPerformerNearestTileRock(Creature performer) {
-        byte tileType = getSurfaceType(getPerformerNearestTile(performer));
-        return tileType == Tiles.Tile.TILE_ROCK.id || tileType == Tiles.Tile.TILE_CLIFF.id;
-    }
-
     public static short getSurfaceHeight(TilePos tilePos) {
         return Tiles.decodeHeight(Server.surfaceMesh.getTile(tilePos));
     }
 
     public static void setSurfaceHeight(TilePos tilePos, int elevation) {
-        Server.surfaceMesh.setTile(tilePos.x, tilePos.y, Tiles.encode((short)elevation, getSurfaceType(tilePos),
+        Server.surfaceMesh.setTile(tilePos.x, tilePos.y, Tiles.encode((short)elevation, getSurfaceTypeId(tilePos),
                 getSurfaceData(tilePos)));
     }
 
-    public static byte getSurfaceType(TilePos tilePos) {
+    public static byte getSurfaceTypeId(TilePos tilePos) {
         return Tiles.decodeType(Server.surfaceMesh.getTile(tilePos));
     }
 
-    public static void setSurfaceType(TilePos tilePos, int newTileTypeId) {
+    public static void setSurfaceTypeId(TilePos tilePos, int newTileTypeId) {
         Server.surfaceMesh.setTile(tilePos.x, tilePos.y, Tiles.encode(getSurfaceHeight(tilePos), (byte)newTileTypeId,
                 getSurfaceData(tilePos)));
+    }
+
+    public static Tiles.Tile getSurfaceType(TilePos tilePos) {
+        return Tiles.getTile(getSurfaceTypeId(tilePos));
     }
 
     public static byte getSurfaceData(TilePos tilePos) {
@@ -73,6 +58,11 @@ public class TileUtilities {
         return Tiles.decodeHeight(Server.rockMesh.getTile(tilePos));
     }
 
+    public static void setRockHeight(TilePos tilePos, int elevation) {
+        Server.rockMesh.setTile(tilePos.x, tilePos.y, Tiles.encode((short)elevation, getRockType(tilePos),
+                getRockData(tilePos)));
+    }
+
     public static byte getRockType(TilePos tilePos) {
         return Tiles.decodeType(Server.rockMesh.getTile(tilePos));
     }
@@ -83,6 +73,11 @@ public class TileUtilities {
 
     public static short getCaveFloorHeight(TilePos tilePos) {
         return Tiles.decodeHeight(Server.caveMesh.getTile(tilePos));
+    }
+
+    public static void setCaveFloorHeight(TilePos tilePos, int elevation) {
+        Server.caveMesh.setTile(tilePos.x, tilePos.y, Tiles.encode((short)elevation, getCaveFloorType(tilePos),
+                getCaveCeilingOffset(tilePos)));
     }
 
     public static byte getCaveFloorType(TilePos tilePos) {
@@ -99,6 +94,11 @@ public class TileUtilities {
      */
     public static byte getCaveCeilingOffset(TilePos tilePos) {
         return Tiles.decodeData(Server.caveMesh.getTile(tilePos));
+    }
+
+    public static void setCaveCeilingOffset(TilePos tilePos, int offset) {
+        Server.caveMesh.setTile(tilePos.x, tilePos.y, Tiles.encode(getCaveFloorHeight(tilePos), getCaveFloorType(tilePos),
+                (byte)offset));
     }
 
     public static int getCaveCeilingHeight(TilePos tilePos) {
@@ -135,8 +135,8 @@ public class TileUtilities {
     }
 
     /**
-     * tiles which are being transmuted have a metric to track that process's progress. For the Server.resourceMesh encoded int,
-     * this value is fetched with bit/masking: 0x0000FF00 >> 8
+     * tiles which are being transmuted have a metric to track that process's progress. For the Server.resourceMesh
+     * encoded int, this value is fetched with bit/masking: 0x0000FF00 >> 8
      * @return int primitive, what is current quality level of the transmute in-process.
      */
     public static int getPotionQLCount(TilePos tilePos) {
@@ -148,10 +148,12 @@ public class TileUtilities {
             return Server.getPotionQLCount(tilePos.x, tilePos.y);
     }
 
+    @SuppressWarnings("SameReturnValue")
     private static boolean hasDigCount(TilePos tilePos) {
         return true;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private static boolean hasPotionCount(TilePos tilePos) {
         return true;
     }
@@ -181,15 +183,17 @@ public class TileUtilities {
         return toReturn;
     }
 
+    //<editor-fold desc=" FARMING ">
+
     /**
-     * Tiles.TILE_TYPE_FIELD = 7
-     * Tiles.TILE_TYPE_FIELD2 = 43
-     * byte id's for fields 3,4,5... would likely start at 44. There is space in the tile type to do so there and it looks
-     * like that is what WO would also do.
-     * Additional farm field types would need to be added with byte code making the field references unavailable. Thus, the
+     * tiles.tile_type_field = 7
+     * tiles.tile_type_field2 = 43
+     * byte id's for fields 3,4,5... would likely start at 44. there is space in the tile type to do so there and it looks
+     * like that is what wo would also do.
+     * additional farm field types would need to be added with byte code making the field references unavailable. thus, the
      * reason for the internal vars scheme.
      *
-     * @param encodedTile int primitive, WU serialized data hex: TTDDHHHH. T=tile type, D=data, H=height.
+     * @param encodedTile int primitive, wu serialized data hex: ttddhhhh. t=tile type, d=data, h=height.
      * @return boolean primitive.
      */
     static boolean isFarmTile(int encodedTile){
@@ -223,13 +227,23 @@ public class TileUtilities {
         return (byte) encodedTile;
     }
 
+    /**
+     * The encoded value is stored in the resourceMesh.
+     * int worldResource = Server.getWorldResource(tilex, tiley); // worldResource is a 0xFFFF size.
+     * int farmedCountMask = 0B1111 1000 0000 0000 - 0 to 248 tho it should never exceed 5.
+     * int farmedChanceMask = 0B0000 0111 1111 1111 - 0 to 2047
+     */
+    static int encodeResourceFarmTileData(int farmCount, int farmChance) {
+        return (farmCount << 11) + (farmChance);
+    }
+
     static int getFarmTileAge(TilePos tilePos) {
         return (getSurfaceData(tilePos) & 0B01110000) >>> 4;
     }
 
     static int getFarmTileCropId(TilePos tilePos) {
         int toReturn = 0;
-        switch (TileUtilities.getSurfaceType(tilePos)) {
+        switch (TileUtilities.getSurfaceTypeId(tilePos)) {
             case Tiles.TILE_TYPE_FIELD:
                 toReturn = TileUtilities.getSurfaceData(tilePos) & 0B00001111;
                 break;
@@ -244,25 +258,150 @@ public class TileUtilities {
         return Server.getWorldResource(tilePos.x, tilePos.y) >> 11;
     }
 
+    //</editor-fold>
+
+    //<editor-fold desc=" TREE BUSH ">
 
     /**
-     * The encoded value is stored in the resourceMesh.
-     * int worldResource = Server.getWorldResource(tilex, tiley); // worldResource is a 0xFFFF size.
-     * int farmedCountMask = 0B1111 1000 0000 0000 - 0 to 248 tho it should never exceed 5.
-     * int farmedChanceMask = 0B0000 0111 1111 1111 - 0 to 2047
+     * int TreeAge = 0B1111 0000; 16 values, see mesh.FoliageAge.enum
+     * int hasFruit = 0B0000 1000; 2 vales, has or not.
+     * int isCentered = 0B0000 0100; 2 values, is centered or not.
+     * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enum
+     * @return a tree's encoded data value.
      */
-    static int encodeResourceFarmTileData(int farmCount, int farmChance) {
-        return (farmCount << 11) + (farmChance);
+    public static int setSurfaceTreeTileData(int treeAge, int hasFruit, int isCentered, int grassLength) {
+        int one = treeAge << 4;
+        int two = hasFruit << 3;
+        int three = isCentered << 2;
+        return one + two + three + grassLength;
+    }
+
+    /**
+     * Surface mesh data's use and tracking a tree's age.
+     * int TreeAge = 0B1111 0000; 16 values, see mesh.FoliageAge.enum
+     *
+     * @param tilePos the tilePos to fetch the tree's age.
+     * @return tree age, see  mesh.FoliageAge.enum.
+     */
+    public static int getTreeAge(TilePos tilePos) {
+        return (getSurfaceData(tilePos) & 0B11110000) >>> 4;
+    }
+
+    /**
+     * Surface mesh data's use and tracking if a tree has fruit.
+     * int hasFruit = 0B0000 1000; 2 vales, has or not.
+     *
+     * @param tilePos the tilePos to test if it has fruit.
+     * @return does the tree have fruit.
+     */
+    public static boolean treeHasFruit(TilePos tilePos) {
+        int value = (getSurfaceData(tilePos) & 0B00001000) >>> 3;
+        return value == 1;
+    }
+
+    /**
+     * Surface mesh data's use and tracking if a tree is centered on tile.
+     * int isCentered = 0B0000 0100; 2 vales, has or not.
+     *
+     * @param tilePos the tilePos to test if centered.
+     * @return is the tree centered.
+     */
+    public static boolean treeIsCentered(TilePos tilePos) {
+        int value = (getSurfaceData(tilePos) & 0B00000100) >>> 2;
+        return value == 1;
+    }
+
+    /**
+     * Surface mesh data's use and tracking a tree's grass length.
+     * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enum
+     *
+     * @param tilePos the tilePost to fetch grass length.
+     * @return a grass length identifier, see mesh.GrassData.GrowthTreeStage.enum
+     */
+    public static int treeGrassLength(TilePos tilePos) {
+        return (getSurfaceData(tilePos) & 0B00000011);
+    }
+
+    public static @Nullable BushData.BushType getBushType(TilePos tilePos) {
+        if (!getSurfaceType(tilePos).isBush())
+            return null;
+        int tileTypeId = getSurfaceTypeId(tilePos);
+        BushData.BushType bushTypeNormal = Arrays.stream(BushData.BushType.values())
+                .filter(bushType -> bushType.asNormalBush() == tileTypeId)
+                .findAny()
+                .orElseGet(null);
+        if (bushTypeNormal != null)
+            return bushTypeNormal;
+        BushData.BushType bushTypeEnchanted = Arrays.stream(BushData.BushType.values())
+                .filter(bushType -> bushType.asEnchantedBush() == tileTypeId)
+                .findAny()
+                .orElseGet(null);
+        if (bushTypeEnchanted != null)
+            return bushTypeEnchanted;
+        BushData.BushType bushTypeMyceliumBush = Arrays.stream(BushData.BushType.values())
+                .filter(bushType -> bushType.asMyceliumBush() == tileTypeId)
+                .findAny()
+                .orElseGet(null);
+        if (bushTypeMyceliumBush != null)
+            return bushTypeMyceliumBush;
+        return null;
+    }
+
+    public static @Nullable TreeData.TreeType getTreeType(TilePos tilePos) {
+        if (!getSurfaceType(tilePos).isTree())
+            return null;
+        int tileTypeId = getSurfaceTypeId(tilePos);
+        TreeData.TreeType treeTypeNormal = Arrays.stream(TreeData.TreeType.values())
+                .filter(treeType -> treeType.asNormalTree() == tileTypeId)
+                .findAny()
+                .orElseGet(null);
+        if (treeTypeNormal != null)
+            return treeTypeNormal;
+        TreeData.TreeType treeTypeEnchanted = Arrays.stream(TreeData.TreeType.values())
+                .filter(treeType -> treeType.asEnchantedTree() == tileTypeId)
+                .findAny()
+                .orElseGet(null);
+        if (treeTypeEnchanted != null)
+            return treeTypeEnchanted;
+        TreeData.TreeType treeTypeMycelium = Arrays.stream(TreeData.TreeType.values())
+                .filter(treeType -> treeType.asMyceliumTree() == tileTypeId)
+                .findAny()
+                .orElseGet(null);
+        if (treeTypeMycelium != null)
+            return treeTypeMycelium;
+        return null;
+    }
+
+    //</editor-fold>
+
+    public static TilePos getPerformerNearestTile(Creature performer) {
+        float METERS_PER_TILE = 4F;
+        int tileX = Math.round(performer.getPosX() / METERS_PER_TILE);
+        int tileY = Math.round(performer.getPosY() / METERS_PER_TILE);
+        return TilePos.fromXY(tileX, tileY);
+    }
+
+    public static TilePos getPerformerOccupiedTile(Creature performer) {
+        int METERS_PER_TILE = 4;
+        int tileX = (int)(performer.getPosX() / METERS_PER_TILE);
+        int tileY = (int)(performer.getPosY() / METERS_PER_TILE);
+        return TilePos.fromXY(tileX, tileY);
+    }
+
+    public static boolean isTargetedSurfaceRock(int encodedTile){
+        return Tiles.decodeType(encodedTile) == Tiles.Tile.TILE_ROCK.id || Tiles.decodeType(encodedTile) == Tiles.Tile.TILE_CLIFF.id;
+    }
+
+    public static boolean isPerformerNearestTileRock(Creature performer) {
+        byte tileType = getSurfaceTypeId(getPerformerNearestTile(performer));
+        return tileType == Tiles.Tile.TILE_ROCK.id || tileType == Tiles.Tile.TILE_CLIFF.id;
     }
 
     static boolean performerIsWithinDistance(Creature performer, int targetX, int targetY, int tileCountProximity) {
         TilePos targetTilePos = TilePos.fromXY(targetX, targetY);
         TilePos performerTilePos = getPerformerOccupiedTile(performer);
-        return Math.abs(performerTilePos.x - targetTilePos.x) <= tileCountProximity && Math.abs(performerTilePos.y - targetTilePos.y) <= tileCountProximity;
-    }
-
-    static void voidWorldResourceEntry(){
-
+        return Math.abs(performerTilePos.x - targetTilePos.x) <= tileCountProximity &&
+                Math.abs(performerTilePos.y - targetTilePos.y) <= tileCountProximity;
     }
 
     public static @Nullable Zone getZoneSafe(TilePos tilePos, boolean isOnSurface) {
@@ -273,7 +412,59 @@ public class TileUtilities {
         return toReturn;
     }
 
-    public static boolean isTileOverriddenByDirt(byte type) {
-        return type == Tiles.Tile.TILE_GRASS.id || type == Tiles.Tile.TILE_MYCELIUM.id || type == Tiles.Tile.TILE_STEPPE.id || type == Tiles.Tile.TILE_LAWN.id || type == Tiles.Tile.TILE_MYCELIUM_LAWN.id;
+    public static boolean isTileOverriddenByDirt(TilePos tilePos) {
+        byte type = getSurfaceTypeId(tilePos);
+        return type == Tiles.Tile.TILE_GRASS.id || type == Tiles.Tile.TILE_MYCELIUM.id || type == Tiles.Tile.TILE_STEPPE.id ||
+                type == Tiles.Tile.TILE_LAWN.id || type == Tiles.Tile.TILE_MYCELIUM_LAWN.id;
+    }
+
+    public static boolean isImmutableTile(TilePos tilePos) {
+        byte type = getSurfaceTypeId(tilePos);
+        return type == Tiles.Tile.TILE_CLAY.id || type == Tiles.Tile.TILE_MARSH.id || type == Tiles.Tile.TILE_PEAT.id ||
+                type == Tiles.Tile.TILE_TAR.id || type == Tiles.Tile.TILE_HOLE.id || type == Tiles.Tile.TILE_MOSS.id ||
+                type == Tiles.Tile.TILE_LAVA.id || Tiles.isMineDoor(type);
+    }
+
+    public static boolean isResourceTile(TilePos tilePos) {
+        byte type = getSurfaceTypeId(tilePos);
+        return type == Tiles.Tile.TILE_CLAY.id || type == Tiles.Tile.TILE_PEAT.id || type == Tiles.Tile.TILE_TAR.id ||
+                type == Tiles.Tile.TILE_MOSS.id;
+    }
+
+    public static boolean isPackable(TilePos tilePos) {
+        byte tileType = getSurfaceTypeId(tilePos);
+        return !isRockTile(tilePos) && !isImmutableTile(tilePos) && !Tiles.isTree(tileType) && !Tiles.isBush(tileType)
+                && tileType != Tiles.Tile.TILE_DIRT_PACKED.id && !Tiles.isRoadType(tileType) &&
+                tileType != Tiles.Tile.TILE_SAND.id && !Tiles.isReinforcedFloor(tileType);
+    }
+
+    public static boolean isRockTile(TilePos tilePos) {
+        byte tileType = getSurfaceTypeId(tilePos);
+        return Tiles.isSolidCave(tileType) || tileType == Tiles.Tile.TILE_CAVE.id || tileType == Tiles.Tile.TILE_CAVE_EXIT.id ||
+                tileType == Tiles.Tile.TILE_CLIFF.id || tileType == Tiles.Tile.TILE_ROCK.id ||
+                tileType == Tiles.Tile.TILE_CAVE_FLOOR_REINFORCED.id;
+    }
+
+    public static long getTileBorderId(int x, int y, int heightOffset, byte layer, int TileBorderDirectionId) {
+        return Tiles.getBorderObjectId(x, y, heightOffset, layer, TileBorderDirectionId,
+                WurmIdTypes.ID_TYPE_TILE_BORDER.getId());
+    }
+
+    public static long getTileCornerId(int x, int y, int heightOffset, byte layer) {
+        return Tiles.getBorderObjectId(x, y, heightOffset, layer, Tiles.TileBorderDirection.CORNER.getCode(),
+                WurmIdTypes.ID_TYPE_TILE_CORNER.getId());
+    }
+
+    public static int getDirtDepth(TilePos tilePos) {
+        return getSurfaceHeight(tilePos) - getRockHeight(tilePos);
+    }
+
+    public static int getSteepestSlope(TilePos targetedTile) {
+        TilePos[] tilePos = {targetedTile.North(), targetedTile.East(), targetedTile.South(), targetedTile.West()};
+        int[] ints = Arrays.stream(tilePos)
+                .mapToInt(value -> Math.abs(TileUtilities.getSurfaceHeight(targetedTile) - TileUtilities.getSurfaceHeight(value)))
+                .toArray();
+        Arrays.sort(ints);
+        return ints[ints.length-1];
     }
 }

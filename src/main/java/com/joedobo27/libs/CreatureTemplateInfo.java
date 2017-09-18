@@ -115,9 +115,9 @@ public enum CreatureTemplateInfo {
     WRAITH(88, "Wraith", "The wraith is born of darkness and shuns the daylight."),
     ZOMBIE(69, "Zombie", "A very bleak humanlike creature stands here, looking abscent-minded.");
 
-    private Integer templateId;
-    private String gameName;
-    private String description;
+    private final Integer templateId;
+    private final String gameName;
+    private final String description;
 
     CreatureTemplateInfo(Integer templateId, String gameName, String description) {
         this.templateId = templateId;

@@ -1,10 +1,11 @@
 package com.joedobo27.libs;
 
+@SuppressWarnings("unused")
 public enum RarityTypes {
-    NO_RARITY(0),
-    RARE(1),
-    SUPREME(2),
-    FANTASTIC(3);
+    RARITY_NONE(0),
+    RARITY_RARE(1),
+    RARITY_SUPREME(2),
+    RARITY_FANTASTIC(3);
 
     /*
     Player getRarity()

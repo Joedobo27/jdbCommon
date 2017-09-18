@@ -1,4 +1,4 @@
-package com.joedobo27.libs;
+package com.joedobo27.libs.bytecode;
 
 class NoMatchingConstPoolIndexException extends RuntimeException{
     NoMatchingConstPoolIndexException(String message) {

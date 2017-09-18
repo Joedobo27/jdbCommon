@@ -1,4 +1,4 @@
-package com.joedobo27.libs;
+package com.joedobo27.libs.bytecode;
 
 import javassist.bytecode.*;
 
@@ -413,11 +413,11 @@ public class BytecodeTools extends Bytecode {
     }
 
     private static class CIStack {
-        private LinkedList<Integer> stack;
-        private LinkedList<Integer> listPositions;
-        private LinkedList<Integer> byteIndexes;
+        private final LinkedList<Integer> stack;
+        private final LinkedList<Integer> listPositions;
+        private final LinkedList<Integer> byteIndexes;
         @SuppressWarnings({"FieldCanBeLocal"})
-        private int maxSize;
+        private final int maxSize;
         private int stackSize = 0;
 
         CIStack(int aSize){
