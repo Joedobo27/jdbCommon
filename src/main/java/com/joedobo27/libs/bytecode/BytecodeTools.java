@@ -20,7 +20,7 @@ public class BytecodeTools extends Bytecode {
     private static final Logger logger = Logger.getLogger(BytecodeTools.class.getName());
     private static final int EMPTY_INT = Integer.MAX_VALUE;
 
-    BytecodeTools(ConstPool constPool){
+    public BytecodeTools(ConstPool constPool){
         super(constPool);
     }
 
@@ -31,7 +31,7 @@ public class BytecodeTools extends Bytecode {
      * @param className String Object type. Full class name using periods.
      * @return int primitive, index in constant pool table.
      */
-    int findClassIndex(String className){
+    public int findClassIndex(String className){
         int classReferenceIndex = getClassReferenceIndex(className);
         if (classReferenceIndex == -1)
             throw new NoMatchingConstPoolIndexException("No matching class found.");
@@ -39,7 +39,7 @@ public class BytecodeTools extends Bytecode {
         return classReferenceIndex;
     }
 
-    int addClassIndex(String className){
+    public int addClassIndex(String className){
         int classReferenceIndex = getClassReferenceIndex(className);
         if (classReferenceIndex == -1)
             classReferenceIndex = this.getConstPool().addClassInfo(className);
@@ -65,7 +65,7 @@ public class BytecodeTools extends Bytecode {
         return methodReferenceIndex;
     }
 
-    int addMethodIndex(int opcode, String name, String methodDescriptor, String className){
+    public int addMethodIndex(int opcode, String name, String methodDescriptor, String className){
         int classReferenceIndex = getClassReferenceIndex(className);
         if (classReferenceIndex == -1)
             classReferenceIndex = this.getConstPool().addClassInfo(className);
@@ -75,7 +75,7 @@ public class BytecodeTools extends Bytecode {
         return indexReference;
     }
 
-    int findFieldIndex(int opcode, String name, String descriptor, String className){
+    public int findFieldIndex(int opcode, String name, String descriptor, String className){
         int fieldReferenceIndex;
         int classReferenceIndex = getClassReferenceIndex(className);
         if (classReferenceIndex == -1)
@@ -91,7 +91,7 @@ public class BytecodeTools extends Bytecode {
         return fieldReferenceIndex;
     }
 
-    int addFieldIndex(int opcode, String name, String descriptor, String className){
+    public int addFieldIndex(int opcode, String name, String descriptor, String className){
         int classReferenceIndex = getClassReferenceIndex(className);
         if (classReferenceIndex == -1)
             classReferenceIndex = this.getConstPool().addClassInfo(className);
@@ -239,6 +239,89 @@ public class BytecodeTools extends Bytecode {
                 .orElseThrow(() -> new NoMatchingConstPoolIndexException("No matching class found."));
         int indexReference = this.getConstPool().addInterfaceMethodrefInfo(classIndexReference, name, descriptor);
         this.add((indexReference >>> 8) & 0xFF, indexReference & 0xFF);
+    }
+
+    /**
+     * Encode the value for arg "integer" into the appropriate byteCode opCode + operand  for the java-int. Add the
+     * encoded information to the byte code object "bytecode".
+     *
+     * @param integer int value.
+     */
+    public void addInteger(int integer) {
+        switch (integer) {
+            case -1:
+                this.add(Opcode.ICONST_M1);
+                break;
+            case 0:
+                this.add(Opcode.ICONST_0);
+                break;
+            case 1:
+                this.add(Opcode.ICONST_1);
+                break;
+            case 2:
+                this.add(Opcode.ICONST_2);
+                break;
+            case 3:
+                this.add(Opcode.ICONST_3);
+                break;
+            case 4:
+                this.add(Opcode.ICONST_4);
+                break;
+            case 5:
+                this.add(Opcode.ICONST_5);
+                break;
+            default:
+                if (integer >= Byte.MIN_VALUE && integer <= Byte.MAX_VALUE) {
+                    this.add(Opcode.BIPUSH);
+                    // integer bound to byte size.
+                    this.add(integer);
+                } else if (integer >= Short.MIN_VALUE && integer <= Short.MAX_VALUE) {
+                    this.add(Opcode.SIPUSH);
+                    // Since byte code requires byte sized blocks, break up integer with bitmask and shift.
+                    this.add((integer & 0xff00) >>> 8, integer & 0x00ff);
+                } else {
+                    // Appends LDC or LDC_W depending on constant pool size.
+                    this.addLdc(this.getConstPool().addIntegerInfo(integer));
+                }
+        }
+    }
+
+    /**
+     * Decode the byte code represented by a opCode + operand(s) at the position in arg "instructionIndex". Return
+     * decoded data as java-int.
+     *
+     * @param codeIterator JA CodeIterator object.
+     * @param instructionIndex int value, it is the codeIterator index of an opCode.
+     * @return int value.
+     */
+    public int getInteger(CodeIterator codeIterator, int instructionIndex) {
+        int opCode = codeIterator.byteAt(instructionIndex);
+        switch (opCode) {
+            case Opcode.ICONST_M1:
+                return -1;
+            case Opcode.ICONST_0:
+                return 0;
+            case Opcode.ICONST_1:
+                return 1;
+            case Opcode.ICONST_2:
+                return 2;
+            case Opcode.ICONST_3:
+                return 3;
+            case Opcode.ICONST_4:
+                return 4;
+            case Opcode.ICONST_5:
+                return 5;
+            case Opcode.BIPUSH:
+                return codeIterator.byteAt(instructionIndex + 1);
+            case Opcode.SIPUSH:
+                return codeIterator.s16bitAt(instructionIndex + 1);
+            case Opcode.LDC:
+                return this.getConstPool().getIntegerInfo(codeIterator.byteAt(instructionIndex + 1));
+            case Opcode.LDC_W:
+                return this.getConstPool().getIntegerInfo(codeIterator.u16bitAt(instructionIndex + 1));
+            default:
+                throw new RuntimeException(String.format("Failed to decode integer. Pos = %d, Bytecode = %d", instructionIndex, opCode));
+        }
     }
 
     void codeBranching(int opcode, int branchCount){
@@ -410,75 +493,5 @@ public class BytecodeTools extends Bytecode {
             a[i]=String.format("%02X", c[i] & 0xff);
         }
         logger.log(Level.INFO,name + " : " + Arrays.toString(a));
-    }
-
-    private static class CIStack {
-        private final LinkedList<Integer> stack;
-        private final LinkedList<Integer> listPositions;
-        private final LinkedList<Integer> byteIndexes;
-        @SuppressWarnings({"FieldCanBeLocal"})
-        private final int maxSize;
-        private int stackSize = 0;
-
-        CIStack(int aSize){
-            stack = new LinkedList<>();
-            listPositions = new LinkedList<>();
-            byteIndexes = new LinkedList<>();
-            maxSize = aSize;
-        }
-
-        void stackPush(int i){
-            stack.add(i);
-            stackSize++;
-        }
-
-        void indexPush(int i){
-            listPositions.add(stackSize);
-            // Actual last index in stack is stackSize - 1. We need index for the next value to be added.
-            byteIndexes.add(i);
-        }
-
-        int[] stackPop(){
-            int removeAllUpTo = IndexPop();
-            removeAllUpTo--; // returns the next position after what was removed. pop 0 and return the new 0.
-            // . We want to remove all up to the new value in 0.
-            int[] removed = new int[removeAllUpTo+1]; // +1 because of 0-based arrays.
-            for (int i=0;i<=removeAllUpTo;i++){
-                removed[i] = stack.remove(0);
-                stackSize--;
-            }
-            return removed;
-        }
-
-        private int IndexPop(){
-            byteIndexes.removeFirst();
-            int removed = listPositions.removeFirst();
-            int nextPosition = listPositions.peekFirst();
-            int size = listPositions.size();
-            for (int i=0;i<size;i++){
-                listPositions.set(i, listPositions.get(i)-nextPosition);
-            }
-            return nextPosition;
-        }
-
-        int getStackSize(){
-            return stackSize;
-        }
-
-        LinkedList<Integer> getStack(){
-            return stack;
-        }
-
-        int getInsertPoint(){
-            return byteIndexes.peekFirst();
-        }
-
-        LinkedList<Integer> getListPositions(){
-            return listPositions;
-        }
-
-        LinkedList<Integer> getByteIndexes(){
-            return byteIndexes;
-        }
     }
 }

@@ -7,6 +7,9 @@ import com.wurmonline.mesh.Tiles;
 import com.wurmonline.mesh.TreeData;
 import com.wurmonline.server.Server;
 import com.wurmonline.server.creatures.Creature;
+import com.wurmonline.server.items.ItemList;
+import com.wurmonline.server.items.ItemTemplate;
+import com.wurmonline.server.items.ItemTemplateFactory;
 import com.wurmonline.server.zones.NoSuchZoneException;
 import com.wurmonline.server.zones.Zone;
 import com.wurmonline.server.zones.Zones;
@@ -196,7 +199,7 @@ public class TileUtilities {
      * @param encodedTile int primitive, wu serialized data hex: ttddhhhh. t=tile type, d=data, h=height.
      * @return boolean primitive.
      */
-    static boolean isFarmTile(int encodedTile){
+    public static boolean isFarmTile(int encodedTile){
         final int field1 = Tiles.TILE_TYPE_FIELD; // 7
         final int field2 = Tiles.TILE_TYPE_FIELD2; // 43
         // potentially field3 at 44
@@ -217,7 +220,7 @@ public class TileUtilities {
      * @param cropId int primitive
      * @return byte encoded value
      */
-    static byte encodeSurfaceFarmTileData(boolean isFarmed, int tileAge, int cropId){
+    public static byte encodeSurfaceFarmTileData(boolean isFarmed, int tileAge, int cropId){
         int encodedTile = 0;
         if (isFarmed)
             encodedTile = 0B10000000;
@@ -233,15 +236,15 @@ public class TileUtilities {
      * int farmedCountMask = 0B1111 1000 0000 0000 - 0 to 248 tho it should never exceed 5.
      * int farmedChanceMask = 0B0000 0111 1111 1111 - 0 to 2047
      */
-    static int encodeResourceFarmTileData(int farmCount, int farmChance) {
+    public static int encodeResourceFarmTileData(int farmCount, int farmChance) {
         return (farmCount << 11) + (farmChance);
     }
 
-    static int getFarmTileAge(TilePos tilePos) {
+    public static int getFarmTileAge(TilePos tilePos) {
         return (getSurfaceData(tilePos) & 0B01110000) >>> 4;
     }
 
-    static int getFarmTileCropId(TilePos tilePos) {
+    public static int getFarmTileCropId(TilePos tilePos) {
         int toReturn = 0;
         switch (TileUtilities.getSurfaceTypeId(tilePos)) {
             case Tiles.TILE_TYPE_FIELD:
@@ -254,8 +257,81 @@ public class TileUtilities {
         return toReturn;
     }
 
-    static int getFarmTileTendCount(TilePos tilePos) {
+    public static int getFarmTileTendCount(TilePos tilePos) {
         return Server.getWorldResource(tilePos.x, tilePos.y) >> 11;
+    }
+
+    public static int getFarmTileCumulativeChance(TilePos tilePos) {
+        return Server.getWorldResource(tilePos.x, tilePos.y) & 0x7FF;
+    }
+
+    public static ItemTemplate getItemTemplateFromHarvestTile(TilePos harvestTile) {
+        int itemTemplateId;
+        switch (TileUtilities.getFarmTileCropId(harvestTile)){
+            case 1:
+                itemTemplateId = ItemList.barley;
+                break;
+            case 2:
+                itemTemplateId = ItemList.wheat;
+                break;
+            case 3:
+                itemTemplateId = ItemList.oat;
+                break;
+            case 4:
+                itemTemplateId = ItemList.corn;
+                break;
+            case 5:
+                itemTemplateId = ItemList.pumpkin;
+                break;
+            case 6:
+                itemTemplateId = ItemList.potato;
+                break;
+            case 7:
+                itemTemplateId = ItemList.cotton;
+                break;
+            case 8:
+                itemTemplateId = ItemList.wemp;
+                break;
+            case 9:
+                itemTemplateId = ItemList.garlic;
+                break;
+            case 10:
+                itemTemplateId = ItemList.onion;
+                break;
+            case 11:
+                itemTemplateId = ItemList.reed;
+                break;
+            case 12:
+                itemTemplateId = ItemList.rice;
+                break;
+            case 13:
+                itemTemplateId = ItemList.strawberries;
+                break;
+            case 14:
+                itemTemplateId = ItemList.carrot;
+                break;
+            case 15:
+                itemTemplateId = ItemList.cabbage;
+                break;
+            case 16:
+                itemTemplateId = ItemList.tomato;
+                break;
+            case 17:
+                itemTemplateId = ItemList.sugarBeet;
+                break;
+            case 18:
+                itemTemplateId = ItemList.lettuce;
+                break;
+            case 19:
+                itemTemplateId = ItemList.peaPod;
+                break;
+            case 20:
+                itemTemplateId = ItemList.cucumber;
+                break;
+            default:
+                itemTemplateId = -1;
+        }
+        return ItemTemplateFactory.getInstance().getTemplateOrNull(itemTemplateId);
     }
 
     //</editor-fold>
@@ -263,10 +339,10 @@ public class TileUtilities {
     //<editor-fold desc=" TREE BUSH ">
 
     /**
-     * int TreeAge = 0B1111 0000; 16 values, see mesh.FoliageAge.enum
+     * int TreeAge = 0B1111 0000; 16 values, see mesh.FoliageAge.enumextend
      * int hasFruit = 0B0000 1000; 2 vales, has or not.
      * int isCentered = 0B0000 0100; 2 values, is centered or not.
-     * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enum
+     * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enumextend
      * @return a tree's encoded data value.
      */
     public static int setSurfaceTreeTileData(int treeAge, int hasFruit, int isCentered, int grassLength) {
@@ -278,10 +354,10 @@ public class TileUtilities {
 
     /**
      * Surface mesh data's use and tracking a tree's age.
-     * int TreeAge = 0B1111 0000; 16 values, see mesh.FoliageAge.enum
+     * int TreeAge = 0B1111 0000; 16 values, see mesh.FoliageAge.enumextend
      *
      * @param tilePos the tilePos to fetch the tree's age.
-     * @return tree age, see  mesh.FoliageAge.enum.
+     * @return tree age, see  mesh.FoliageAge.enumextend.
      */
     public static int getTreeAge(TilePos tilePos) {
         return (getSurfaceData(tilePos) & 0B11110000) >>> 4;
@@ -313,10 +389,10 @@ public class TileUtilities {
 
     /**
      * Surface mesh data's use and tracking a tree's grass length.
-     * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enum
+     * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enumextend
      *
      * @param tilePos the tilePost to fetch grass length.
-     * @return a grass length identifier, see mesh.GrassData.GrowthTreeStage.enum
+     * @return a grass length identifier, see mesh.GrassData.GrowthTreeStage.enumextend
      */
     public static int treeGrassLength(TilePos tilePos) {
         return (getSurfaceData(tilePos) & 0B00000011);
@@ -466,5 +542,20 @@ public class TileUtilities {
                 .toArray();
         Arrays.sort(ints);
         return ints[ints.length-1];
+    }
+
+    public static TilePos getTilePosFromMeshArrayOrdinal(int ordinal) {
+        int columns = (int) Math.pow(Server.caveMesh.getSizeLevel(), 2.0d); // Bitwise, WU usually does this: 1 << getSizeLevel()
+        int y = ordinal / columns; // Bitwise: ordinal >> getSizeLevel()
+        int x = ordinal % columns; // Bitwise: ordinal & (~(1 << getSizeLevel()))
+        return TilePos.fromXY(x, y);
+        /*
+        int meshArraySize = Server.caveMesh.getData().length;
+        int columns = (int) Math.pow(Server.caveMesh.getSizeLevel(), 2.0d); // Bitwise, WU usually does this: 1 << getSizeLevel()
+        for(int meshArrayOrdinal=0; meshArrayOrdinal<meshArraySize; meshArrayOrdinal++) {
+            int y = meshArrayOrdinal / columns; // Bitwise: ordinal >> getSizeLevel()
+            int x = meshArrayOrdinal % columns; // Bitwise: ordinal & (~(1 << getSizeLevel()))
+        }
+        */
     }
 }

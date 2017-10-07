@@ -16,8 +16,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 import static com.joedobo27.libs.action.DurationModifiers.*;
@@ -35,11 +33,9 @@ public abstract class ActionMaster {
     protected final int shortestTime;
     protected final int minimumStamina;
 
-    protected final ArrayList<Function<ActionMaster, Boolean>> failureTestFunctions;
-
 
     protected ActionMaster(Action action, Creature performer, @Nullable Item activeTool, @Nullable Integer usedSkill, int minSkill, int maxSkill, int longestTime,
-                           int shortestTime, int minimumStamina, ArrayList<Function<ActionMaster, Boolean>> failureTestFunctions) {
+                           int shortestTime, int minimumStamina) {
         this.action = action;
         this.performer = performer;
         this.activeTool = activeTool;
@@ -49,7 +45,6 @@ public abstract class ActionMaster {
         this.longestTime = longestTime;
         this.shortestTime = shortestTime;
         this.minimumStamina = minimumStamina;
-        this.failureTestFunctions = failureTestFunctions;
     }
 
     public boolean isActionStartTime(float counter){
@@ -57,7 +52,7 @@ public abstract class ActionMaster {
     }
 
     public boolean isActionTimedOut(Action action, float counter) {
-        return counter >= action.getTimeLeft() / 10.0f;
+        return counter-1 >= action.getTimeLeft() / 10.0f;
     }
 
     public void doActionStartMessages(String you, String broadcast) {
@@ -174,11 +169,15 @@ public abstract class ActionMaster {
         return itemsAll;
     }
 
+    public Action getAction() {
+        return action;
+    }
+
     public Creature getPerformer() {
         return performer;
     }
 
-    public abstract TilePos getTargetTile();
+    abstract public Item getActiveTool();
 
     public int getActionId() {
         return this.action.getNumber();
@@ -186,10 +185,6 @@ public abstract class ActionMaster {
 
     public int getMinimumStamina() {
         return minimumStamina;
-    }
-
-    public @Nullable ArrayList<Function<ActionMaster, Boolean>> getFailureTestFunctions() {
-        return this.failureTestFunctions;
     }
 
     static public void setActionEntryMaxRangeReflect(ActionEntry actionEntry, Integer maxMeters, Logger logger) {

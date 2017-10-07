@@ -1,6 +1,6 @@
 package com.joedobo27.libs.action;
 
-public class TimeScalingLinearFunction {
+class TimeScalingLinearFunction {
     private final int longestTime;
     private final double slope;
     private final double yIntercept;
@@ -17,13 +17,14 @@ public class TimeScalingLinearFunction {
         return time;
     }
 
-    static private double getSlopeOfFunction(int minSkill, int maxSkill, int longestTime, int shortestTime) {
+    static private double getSlopeOfFunction(double minSkill, double maxSkill, double longestTime, double
+            shortestTime) {
         if (minSkill == maxSkill || longestTime == shortestTime)
             return 0;
         return (longestTime - shortestTime) / (minSkill - maxSkill);
     }
 
-    static private double getYInterceptOfFunction(int minSkill, int maxSkill, double slope) {
+    static private double getYInterceptOfFunction(double minSkill, double maxSkill, double slope) {
         return minSkill - (slope * maxSkill);
     }
 
