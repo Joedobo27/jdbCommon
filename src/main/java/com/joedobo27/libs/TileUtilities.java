@@ -511,7 +511,7 @@ public class TileUtilities {
         byte tileType = getSurfaceTypeId(tilePos);
         return !isRockTile(tilePos) && !isImmutableTile(tilePos) && !Tiles.isTree(tileType) && !Tiles.isBush(tileType)
                 && tileType != Tiles.Tile.TILE_DIRT_PACKED.id && !Tiles.isRoadType(tileType) &&
-                tileType != Tiles.Tile.TILE_SAND.id && !Tiles.isReinforcedFloor(tileType);
+                tileType != Tiles.Tile.TILE_SAND.id && !Tiles.isRoadType(tileType);
     }
 
     public static boolean isRockTile(TilePos tilePos) {

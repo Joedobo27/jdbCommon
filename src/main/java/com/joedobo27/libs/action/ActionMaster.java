@@ -1,5 +1,6 @@
 package com.joedobo27.libs.action;
 
+import com.joedobo27.libs.LinearScalingFunction;
 import com.wurmonline.math.TilePos;
 import com.wurmonline.server.Server;
 import com.wurmonline.server.behaviours.Action;
@@ -11,6 +12,7 @@ import com.wurmonline.server.skills.NoSuchSkillException;
 import com.wurmonline.server.skills.Skill;
 import com.wurmonline.server.zones.VolaTile;
 import com.wurmonline.server.zones.Zones;
+import com.wurmonline.shared.util.MaterialUtilities;
 import org.gotti.wurmunlimited.modloader.ReflectionUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import static com.joedobo27.libs.action.DurationModifiers.*;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public abstract class ActionMaster {
@@ -32,7 +33,7 @@ public abstract class ActionMaster {
     protected final int longestTime;
     protected final int shortestTime;
     protected final int minimumStamina;
-
+    protected int actionTimeTenthSecond;
 
     protected ActionMaster(Action action, Creature performer, @Nullable Item activeTool, @Nullable Integer usedSkill, int minSkill, int maxSkill, int longestTime,
                            int shortestTime, int minimumStamina) {
@@ -73,6 +74,10 @@ public abstract class ActionMaster {
      * the best at end game.
      */
     public void setInitialTime(ActionEntry actionEntry) {
+        double MAX_WOA_EFFECT = 0.20;
+        double TOOL_RARITY_EFFECT = 0.10;
+        double ACTION_RARITY_EFFECT = 0.33;
+
         Skill toolSkill = null;
         double bonus = 0;
         if (this.activeTool != null && this.activeTool.hasPrimarySkill()) {
@@ -90,42 +95,35 @@ public abstract class ActionMaster {
         else
             modifiedKnowledge = this.performer.getSkills().getSkillOrLearn(this.usedSkill).getKnowledge(this.activeTool,
                 bonus);
-        TimeScalingLinearFunction tslf = TimeScalingLinearFunction.makeGetLinearFunction(this.minSkill, this.maxSkill,
+        LinearScalingFunction linearScalingFunction = LinearScalingFunction.make(this.minSkill, this.maxSkill,
                 this.longestTime, this.shortestTime);
-        int time = tslf.getTensOfSecondTime(modifiedKnowledge);
-        time = woaReduce(time);
-        time = itemRarityReduce(time);
-        time = actionRarityReduce(time);
-        time = runeReduce(time);
-        this.action.setTimeLeft(time);
-        this.performer.sendActionControl(actionEntry.getVerbString(), true, time);
-    }
+        double time = linearScalingFunction.doFunctionOfX(modifiedKnowledge);
 
-    private int woaReduce(int time) {
-        if (this.activeTool == null || this.activeTool.getSpellSpeedBonus() == 0.0f)
-            return time;
-        return (int)(Math.max(this.shortestTime, time * (1 -
-                    (MAX_WOA_EFFECT.reductionMultiple * this.activeTool.getSpellSpeedBonus() / 100.0))));
-    }
+        if (this.activeTool != null && this.activeTool.getSpellSpeedBonus() != 0.0f)
+            time = Math.max(this.shortestTime, time * (1 - (MAX_WOA_EFFECT *
+                    this.activeTool.getSpellSpeedBonus() / 100.0)));
 
-    private int itemRarityReduce( int time) {
-        if (this.activeTool == null || this.activeTool.getRarity() == 0)
-            return time;
-        return (int)(Math.max(this.shortestTime, time * (1 - (this.activeTool.getRarity() * TOOL_RARITY_EFFECT.reductionMultiple))));
-    }
+        if (this.activeTool != null && this.activeTool.getRarity() != MaterialUtilities.COMMON)
+            time = Math.max(this.shortestTime, time * (1 - (this.activeTool.getRarity() *
+                    TOOL_RARITY_EFFECT)));
 
-    private int actionRarityReduce(int time) {
-        if (this.action == null || this.action.getRarity() == 0)
-            return time;
-        return (int)(Math.max(this.shortestTime, time * (1 - (this.action.getRarity() * ACTION_RARITY_EFFECT.reductionMultiple))));
-    }
+        if (this.action != null && this.action.getRarity() != MaterialUtilities.COMMON)
+            time = Math.max(this.shortestTime, time * (1 - (this.action.getRarity() * ACTION_RARITY_EFFECT)));
 
-    private int runeReduce(int time) {
-        if (this.activeTool == null || this.activeTool.getSpellEffects() == null ||
-                this.activeTool.getSpellEffects().getRuneEffect() == -10L)
-            return time;
-        return (int)(Math.max(this.shortestTime, time * (1 - RuneUtilities.getModifier(this.activeTool.getSpellEffects().getRuneEffect(),
-                    RuneUtilities.ModifierEffect.ENCH_USESPEED))));
+        if (this.activeTool != null && this.activeTool.getSpellEffects() != null &&
+                this.activeTool.getSpellEffects().getRuneEffect() != -10L)
+            time = Math.max(this.shortestTime, time * (1 -
+                    RuneUtilities.getModifier(this.activeTool.getSpellEffects().getRuneEffect(),
+                    RuneUtilities.ModifierEffect.ENCH_USESPEED)));
+
+        int timeInt = (int)time;
+        if (this.action != null)
+            this.action.setTimeLeft(timeInt);
+        this.performer.sendActionControl(actionEntry.getVerbString(), true, timeInt);
+
+        synchronized (this){
+            this.actionTimeTenthSecond = timeInt;
+        }
     }
 
     public void doActionEndMessages() {
@@ -185,6 +183,10 @@ public abstract class ActionMaster {
 
     public int getMinimumStamina() {
         return minimumStamina;
+    }
+
+    public int getActionTimeTenthSecond() {
+        return actionTimeTenthSecond;
     }
 
     static public void setActionEntryMaxRangeReflect(ActionEntry actionEntry, Integer maxMeters, Logger logger) {
