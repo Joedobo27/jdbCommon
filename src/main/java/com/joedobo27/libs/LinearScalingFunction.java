@@ -25,7 +25,7 @@ public class LinearScalingFunction {
         if (minimumX == maximumX || maximumY == minimumY)
             slope = 0;
         else
-            slope = (maximumY - minimumY) / (minimumX - maximumX);
+            slope = (minimumY - maximumY) / (minimumX - maximumX);
 
         double yIntercept = minimumX - (slope * maximumX);
         return new LinearScalingFunction(minimumX, maximumX, minimumY, maximumY, slope, yIntercept);

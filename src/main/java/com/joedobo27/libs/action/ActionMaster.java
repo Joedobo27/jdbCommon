@@ -56,11 +56,6 @@ public abstract class ActionMaster {
         return counter-1 >= action.getTimeLeft() / 10.0f;
     }
 
-    public void doActionStartMessages(String you, String broadcast) {
-        this.performer.getCommunicator().sendNormalServerMessage(you);
-        Server.getInstance().broadCastAction(broadcast, this.performer, 5);
-    }
-
     public void doActionStartMessages() {
         String youMessage = String.format("You start %s.", this.action.getActionString());
         this.performer.getCommunicator().sendNormalServerMessage(youMessage);
@@ -175,12 +170,6 @@ public abstract class ActionMaster {
         return performer;
     }
 
-    abstract public Item getActiveTool();
-
-    public int getActionId() {
-        return this.action.getNumber();
-    }
-
     public int getMinimumStamina() {
         return minimumStamina;
     }
@@ -198,4 +187,8 @@ public abstract class ActionMaster {
             logger.warning(e.getMessage());
         }
     }
+
+    abstract public Item getActiveTool();
+
+    abstract public TilePos getTargetTile();
 }
