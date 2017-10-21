@@ -6,6 +6,7 @@ import com.wurmonline.mesh.Tiles;
 import com.wurmonline.server.Constants;
 import com.wurmonline.server.items.Item;
 import com.wurmonline.server.items.ItemList;
+import com.wurmonline.server.items.ItemTemplate;
 import com.wurmonline.server.structures.BridgePart;
 import com.wurmonline.server.structures.Fence;
 import com.wurmonline.server.structures.Structure;
@@ -44,6 +45,9 @@ public class ActionFailureFunction {
     public static final int FAILURE_FUNCTION_PARTIAL_PAVER = 18;
     public static final int FAILURE_FUNCTION_NULL_TARGET_TILE = 19;
     public static final int FAILURE_FUNCTION_NULL_ACTIVE_ITEM = 20;
+    public static final int FAILURE_FUNCTION_TARGET_NOT_FARM_ITEM = 21;
+    public static final int FAILURE_FUNCTION_CROPS_NOT_RIPE = 22;
+    public static final int FAILURE_FUNCTION_TOON_HOLDING_MAX_WEIGHT = 23;
 
 
     private final String name;
@@ -81,7 +85,7 @@ public class ActionFailureFunction {
     static {
         failureFunctions.put(0, new ActionFailureFunction("FAILURE_FUNCTION_EMPTY", null));
         failureFunctions.put(1, new ActionFailureFunction("FAILURE_FUNCTION_INSUFFICIENT_STAMINA",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (actionMaster.getPerformer().getStatus().getStamina() < actionMaster.getMinimumStamina()) {
                         actionMaster.getPerformer().getCommunicator().sendNormalServerMessage(
                                 "You don't have enough stamina to " + actionMaster.getAction().getActionString() + ".");
@@ -90,7 +94,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(2, new ActionFailureFunction("FAILURE_FUNCTION_SERVER_BOARDER_TOO_CLOSE",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (actionMaster.getTargetTile().x < 0 || actionMaster.getTargetTile().x > 1 << Constants.meshSize ||
                             actionMaster.getTargetTile().y < 0 || actionMaster.getTargetTile().y > 1 << Constants.meshSize) {
                         actionMaster.getPerformer().getCommunicator().sendNormalServerMessage(
@@ -100,7 +104,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(3, new ActionFailureFunction("FAILURE_FUNCTION_TILE_GOD_PROTECTED",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (Zones.isTileProtected(actionMaster.getTargetTile().x, actionMaster.getTargetTile().y)) {
                         actionMaster.getPerformer().getCommunicator().sendNormalServerMessage("" +
                                 "This tile is protected by the gods. You can not " + actionMaster.getAction().getActionString() + " here.");
@@ -109,7 +113,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(4, new ActionFailureFunction("FAILURE_FUNCTION_PVE_VILLAGE_ENEMY_TILE_ACTION",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     Village village = Zones.getVillage(actionMaster.getTargetTile().x, actionMaster.getTargetTile().y,
                             actionMaster.getPerformer().isOnSurface());
                     if (village != null && !village.isActionAllowed(actionMaster.action.getNumber(), actionMaster.getPerformer(),
@@ -123,7 +127,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(5, new ActionFailureFunction("FAILURE_FUNCTION_PVP_VILLAGE_ENEMY_TILE_ACTION",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     Village village = Zones.getVillage(actionMaster.getTargetTile().x, actionMaster.getTargetTile().y,
                             actionMaster.getPerformer().isOnSurface());
                     if (village != null && !village.isActionAllowed(actionMaster.action.getNumber(), actionMaster.getPerformer(),
@@ -136,7 +140,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(6, new ActionFailureFunction("FAILURE_FUNCTION_ROCK_MESH_AND_CAVE_CEILING_TOO_CLOSE",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (!actionMaster.getPerformer().isOnSurface())
                         return false;
                     if (TileUtilities.getCaveFloorHeight(actionMaster.getTargetTile()) +
@@ -149,7 +153,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(7, new ActionFailureFunction("FAILURE_FUNCTION_CORNER_OCCUPIED_BY_FENCE",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     Tiles.TileBorderDirection[] tileBorderDirections = {Tiles.TileBorderDirection.DIR_HORIZ,
                             Tiles.TileBorderDirection.DIR_HORIZ, Tiles.TileBorderDirection.DIR_DOWN,
                             Tiles.TileBorderDirection.DIR_DOWN};
@@ -170,7 +174,7 @@ public class ActionFailureFunction {
                         return false;
                 }));
         failureFunctions.put(8, new ActionFailureFunction("FAILURE_FUNCTION_IS_OCCUPIED_BY_HOUSE",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     TilePos[] buildings = {actionMaster.getTargetTile(), actionMaster.getTargetTile().West(),
                             actionMaster.getTargetTile().NorthWest(), actionMaster.getTargetTile().North()};
                     if (IntStream.range(0,4)
@@ -190,7 +194,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(9, new ActionFailureFunction("FAILURE_FUNCTION_TILE_OCCUPIED_BY_BRIDGE_SUPPORT",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     TilePos[] buildings = {actionMaster.getTargetTile(), actionMaster.getTargetTile().West(),
                             actionMaster.getTargetTile().NorthWest(), actionMaster.getTargetTile().North()};
                     if (IntStream.range(0,4)
@@ -213,7 +217,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(10, new ActionFailureFunction("FAILURE_FUNCTION_TILE_OCCUPIED_BY_BRIDGE_EXIT",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     TilePos[] bridgeExits = {actionMaster.getTargetTile().West(),
                             actionMaster.getTargetTile().North(), actionMaster.getTargetTile().East(),
                             actionMaster.getTargetTile().South()};
@@ -240,7 +244,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(11, new ActionFailureFunction("FAILURE_FUNCTION_IS_OCCUPIED_BY_CAVE_ENTRANCE",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (!actionMaster.getPerformer().isOnSurface())
                         return false;
                     TilePos[] caveOpenings = {actionMaster.getTargetTile(), actionMaster.getTargetTile().West(),
@@ -258,7 +262,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(12, new ActionFailureFunction("FAILURE_FUNCTION_IS_DIGGING_ROCK",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (TileUtilities.getDirtDepth(actionMaster.getTargetTile()) <= 0){
                         actionMaster.getPerformer().getCommunicator().sendNormalServerMessage("" +
                                 "You can't do "+actionMaster.getAction().getActionEntry().getVerbString()+
@@ -268,7 +272,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(13, new ActionFailureFunction("FAILURE_FUNCTION_NO_DIRT_NEARBY",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     Item[] groundItems = actionMaster.getGroundItems(ItemList.dirtPile, actionMaster.getTargetTile());
                     Item[] inventoryItems = actionMaster.getInventoryItems(ItemList.dirtPile);
                     if ((groundItems == null || groundItems.length == 0) && (inventoryItems == null ||
@@ -281,7 +285,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(14, new ActionFailureFunction("FAILURE_FUNCTION_NO_CONCRETE_NEARBY",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     Item[] groundItems = actionMaster.getGroundItems(ItemList.concrete, actionMaster.getTargetTile());
                     Item[] inventoryItems = actionMaster.getInventoryItems(ItemList.concrete);
                     if ((groundItems == null || groundItems.length == 0) && (inventoryItems == null ||
@@ -294,7 +298,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(15, new ActionFailureFunction("FAILURE_FUNCTION_CAVE_FLOOR_AND_CEILING_PROXIMITY",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     if (!actionMaster.getPerformer().isOnSurface() &&
                             TileUtilities.getCaveCeilingOffset(actionMaster.getTargetTile()) <= 20) {
                         actionMaster.getPerformer().getCommunicator().sendNormalServerMessage("" +
@@ -304,7 +308,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(16, new ActionFailureFunction("FAILURE_FUNCTION_CAVE_ENTRANCE_BORDER",
-                (ActionMaster actionMaster) -> {
+                actionMaster -> {
                     TilePos tilePos = actionMaster.getTargetTile();
                     int surfaceHeight = TileUtilities.getSurfaceHeight(tilePos);
                     if (surfaceHeight == TileUtilities.getCaveFloorHeight(tilePos) && surfaceHeight ==
@@ -316,7 +320,7 @@ public class ActionFailureFunction {
                     return false;
                 }));
         failureFunctions.put(17, new ActionFailureFunction("FAILURE_FUNCTION_PAVING_DEPTH",
-                (actionMaster -> {
+                actionMaster -> {
                     TilePos[] tilePoss = {actionMaster.getTargetTile(), actionMaster.getTargetTile().East(),
                     actionMaster.getTargetTile().SouthEast(), actionMaster.getTargetTile().South()};
                     if (Arrays.stream(tilePoss)
@@ -326,7 +330,7 @@ public class ActionFailureFunction {
                         return true;
                     }
                     return false;
-                })));
+                }));
         failureFunctions.put(18, new ActionFailureFunction("FAILURE_FUNCTION_PARTIAL_PAVER",
                 actionMaster -> {
                     if (actionMaster.getActiveTool().getTemplateId() != ItemList.stoneChisel &&
@@ -358,6 +362,65 @@ public class ActionFailureFunction {
                     }
                     return false;
                 }));
+        failureFunctions.put(21, new ActionFailureFunction("FAILURE_FUNCTION_TARGET_NOT_FARM_ITEM",
+                actionMaster -> {
+                    ItemTemplate targetTemplate = actionMaster.getTargetItem().getRealTemplate();
+                    switch (targetTemplate.getTemplateId()) {
+                        case ItemList.barley:
+                        case ItemList.rye:
+                        case ItemList.oat:
+                        case ItemList.corn:
+                        case ItemList.pumpkin:
+                        case ItemList.pumpkinSeed:
+                        case ItemList.potato:
+                        case ItemList.cotton:
+                        case ItemList.cottonSeed:
+                        case ItemList.wemp:
+                        case ItemList.wempSeed:
+                        case ItemList.garlic:
+                        case ItemList.onion:
+                        case ItemList.reed:
+                        case ItemList.reedSeed:
+                        case ItemList.rice:
+                        case ItemList.strawberries:
+                        case ItemList.strawberrySeed:
+                        case ItemList.carrot:
+                        case ItemList.carrotSeeds:
+                        case ItemList.cabbage:
+                        case ItemList.cabbageSeeds:
+                        case ItemList.tomato:
+                        case ItemList.tomatoSeeds:
+                        case ItemList.sugarBeet:
+                        case ItemList.sugarBeetSeeds:
+                        case ItemList.lettuce:
+                        case ItemList.lettuceSeeds:
+                        case ItemList.pea:
+                        case ItemList.peaPod:
+                        case ItemList.cucumber:
+                        case ItemList.cucumberSeeds:
+                            return true;
+                        default:
+                            return false;
+                    }
+                }));
+        failureFunctions.put(22, new ActionFailureFunction("FAILURE_FUNCTION_CROPS_NOT_RIPE",
+                actionMaster -> {
+                    if (TileUtilities.getFarmTileAge(actionMaster.getTargetTile()) < 5 ||
+                            TileUtilities.getFarmTileAge(actionMaster.getTargetTile()) > 6) {
+                        actionMaster.getPerformer().getCommunicator().sendNormalServerMessage("" +
+                                "The crops aren't ripe.");
+                        return true;
+                    }
+                    return false;
+                }));
+        failureFunctions.put(23, new ActionFailureFunction("FAILURE_FUNCTION_TOON_HOLDING_MAX_WEIGHT",
+                (actionMaster -> {
+                    if (actionMaster.getPerformer().getCarryingCapacityLeft() < 1) {
+                        actionMaster.getPerformer().getCommunicator().sendNormalServerMessage("" +
+                                "You can't carry anything else.");
+                        return true;
+                    }
+                    return false;
+                })));
     }
-
 }

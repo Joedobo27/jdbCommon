@@ -190,5 +190,7 @@ public abstract class ActionMaster {
 
     abstract public Item getActiveTool();
 
+    abstract public Item getTargetItem();
+
     abstract public TilePos getTargetTile();
 }
