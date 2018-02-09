@@ -45,7 +45,7 @@ public class ActionFailureFunction {
     public static final int FAILURE_FUNCTION_PARTIAL_PAVER = 18;
     public static final int FAILURE_FUNCTION_NULL_TARGET_TILE = 19;
     public static final int FAILURE_FUNCTION_NULL_ACTIVE_ITEM = 20;
-    public static final int FAILURE_FUNCTION_TARGET_NOT_FARM_ITEM = 21;
+
     public static final int FAILURE_FUNCTION_CROPS_NOT_RIPE = 22;
     public static final int FAILURE_FUNCTION_TOON_HOLDING_MAX_WEIGHT = 23;
 
@@ -361,47 +361,6 @@ public class ActionFailureFunction {
                         return true;
                     }
                     return false;
-                }));
-        failureFunctions.put(21, new ActionFailureFunction("FAILURE_FUNCTION_TARGET_NOT_FARM_ITEM",
-                actionMaster -> {
-                    ItemTemplate targetTemplate = actionMaster.getTargetItem().getRealTemplate();
-                    switch (targetTemplate.getTemplateId()) {
-                        case ItemList.barley:
-                        case ItemList.rye:
-                        case ItemList.oat:
-                        case ItemList.corn:
-                        case ItemList.pumpkin:
-                        case ItemList.pumpkinSeed:
-                        case ItemList.potato:
-                        case ItemList.cotton:
-                        case ItemList.cottonSeed:
-                        case ItemList.wemp:
-                        case ItemList.wempSeed:
-                        case ItemList.garlic:
-                        case ItemList.onion:
-                        case ItemList.reed:
-                        case ItemList.reedSeed:
-                        case ItemList.rice:
-                        case ItemList.strawberries:
-                        case ItemList.strawberrySeed:
-                        case ItemList.carrot:
-                        case ItemList.carrotSeeds:
-                        case ItemList.cabbage:
-                        case ItemList.cabbageSeeds:
-                        case ItemList.tomato:
-                        case ItemList.tomatoSeeds:
-                        case ItemList.sugarBeet:
-                        case ItemList.sugarBeetSeeds:
-                        case ItemList.lettuce:
-                        case ItemList.lettuceSeeds:
-                        case ItemList.pea:
-                        case ItemList.peaPod:
-                        case ItemList.cucumber:
-                        case ItemList.cucumberSeeds:
-                            return true;
-                        default:
-                            return false;
-                    }
                 }));
         failureFunctions.put(22, new ActionFailureFunction("FAILURE_FUNCTION_CROPS_NOT_RIPE",
                 actionMaster -> {

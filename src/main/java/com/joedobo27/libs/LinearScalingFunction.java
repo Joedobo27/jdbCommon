@@ -3,32 +3,36 @@ package com.joedobo27.libs;
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class LinearScalingFunction {
 
-    private final double minimumX;
-    private final double maximumX;
-    private final double minimumY;
-    private final double maximumY;
+    private final double x1;
+    private final double y1;
+    private final double x2;
+    private final double y2;
     private final double slope;
     private final double yIntercept;
 
-    private LinearScalingFunction(double minimumX, double maximumX, double minimumY, double maximumY, double slope,
+    private LinearScalingFunction(double x1, double y1, double x2, double y2, double slope,
                                   double yIntercept) {
-        this.minimumX = minimumX;
-        this.maximumX = maximumX;
-        this.minimumY = minimumY;
-        this.maximumY = maximumY;
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
         this.slope = slope;
         this.yIntercept = yIntercept;
     }
 
-    public static LinearScalingFunction make(double minimumX, double maximumX, double minimumY, double maximumY) {
+    public static LinearScalingFunction make(double x1, double x2, double y1, double y2) {
         double slope;
-        if (minimumX == maximumX || maximumY == minimumY)
+        double rise;
+        double run;
+        if (x1 == x2 || y1 == y2)
             slope = 0;
-        else
-            slope = (minimumY - maximumY) / (minimumX - maximumX);
-
-        double yIntercept = minimumX - (slope * maximumX);
-        return new LinearScalingFunction(minimumX, maximumX, minimumY, maximumY, slope, yIntercept);
+        else {
+            rise = y2 - y1;
+            run = x2 - x1;
+            slope =  rise / run;
+        }
+        double yIntercept = y1 - (slope * x1);
+        return new LinearScalingFunction(x1, y1, x2, y2, slope, yIntercept);
     }
 
     public double doFunctionOfX(double xValue) {

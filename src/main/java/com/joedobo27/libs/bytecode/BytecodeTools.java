@@ -324,7 +324,7 @@ public class BytecodeTools extends Bytecode {
         }
     }
 
-    void codeBranching(int opcode, int branchCount){
+    public void codeBranching(int opcode, int branchCount){
         this.addOpcode(opcode);
         this.add((branchCount >>> 8) & 0xFF, branchCount & 0xFF);
     }

@@ -7,9 +7,6 @@ import com.wurmonline.mesh.Tiles;
 import com.wurmonline.mesh.TreeData;
 import com.wurmonline.server.Server;
 import com.wurmonline.server.creatures.Creature;
-import com.wurmonline.server.items.ItemList;
-import com.wurmonline.server.items.ItemTemplate;
-import com.wurmonline.server.items.ItemTemplateFactory;
 import com.wurmonline.server.zones.NoSuchZoneException;
 import com.wurmonline.server.zones.Zone;
 import com.wurmonline.server.zones.Zones;
@@ -265,75 +262,6 @@ public class TileUtilities {
         return Server.getWorldResource(tilePos.x, tilePos.y) & 0x7FF;
     }
 
-    public static ItemTemplate getItemTemplateFromHarvestTile(TilePos harvestTile) {
-        int itemTemplateId;
-        switch (TileUtilities.getFarmTileCropId(harvestTile)){
-            case 1:
-                itemTemplateId = ItemList.barley;
-                break;
-            case 2:
-                itemTemplateId = ItemList.wheat;
-                break;
-            case 3:
-                itemTemplateId = ItemList.oat;
-                break;
-            case 4:
-                itemTemplateId = ItemList.corn;
-                break;
-            case 5:
-                itemTemplateId = ItemList.pumpkin;
-                break;
-            case 6:
-                itemTemplateId = ItemList.potato;
-                break;
-            case 7:
-                itemTemplateId = ItemList.cotton;
-                break;
-            case 8:
-                itemTemplateId = ItemList.wemp;
-                break;
-            case 9:
-                itemTemplateId = ItemList.garlic;
-                break;
-            case 10:
-                itemTemplateId = ItemList.onion;
-                break;
-            case 11:
-                itemTemplateId = ItemList.reed;
-                break;
-            case 12:
-                itemTemplateId = ItemList.rice;
-                break;
-            case 13:
-                itemTemplateId = ItemList.strawberries;
-                break;
-            case 14:
-                itemTemplateId = ItemList.carrot;
-                break;
-            case 15:
-                itemTemplateId = ItemList.cabbage;
-                break;
-            case 16:
-                itemTemplateId = ItemList.tomato;
-                break;
-            case 17:
-                itemTemplateId = ItemList.sugarBeet;
-                break;
-            case 18:
-                itemTemplateId = ItemList.lettuce;
-                break;
-            case 19:
-                itemTemplateId = ItemList.peaPod;
-                break;
-            case 20:
-                itemTemplateId = ItemList.cucumber;
-                break;
-            default:
-                itemTemplateId = -1;
-        }
-        return ItemTemplateFactory.getInstance().getTemplateOrNull(itemTemplateId);
-    }
-
     //</editor-fold>
 
     //<editor-fold desc=" TREE BUSH ">
@@ -345,11 +273,11 @@ public class TileUtilities {
      * int grassLength = 0B0000 0011; 4 values, see mesh.GrassData.GrowthTreeStage.enumextend
      * @return a tree's encoded data value.
      */
-    public static int setSurfaceTreeTileData(int treeAge, int hasFruit, int isCentered, int grassLength) {
+    public static byte encodeSurfaceTreeTileData(int treeAge, int hasFruit, int isCentered, int grassLength) {
         int one = treeAge << 4;
         int two = hasFruit << 3;
         int three = isCentered << 2;
-        return one + two + three + grassLength;
+        return (byte)(one + two + three + grassLength);
     }
 
     /**
@@ -373,6 +301,13 @@ public class TileUtilities {
     public static boolean treeHasFruit(TilePos tilePos) {
         int value = (getSurfaceData(tilePos) & 0B00001000) >>> 3;
         return value == 1;
+    }
+
+    public static void setTreeHasFruit(TilePos tilePos, boolean hasFruit) {
+        byte encodedTreeData = encodeSurfaceTreeTileData(getTreeAge(tilePos), hasFruit ? 1 : 0, treeIsCentered(tilePos) ? 1 : 0,
+                treeGrassLength(tilePos));
+        Server.surfaceMesh.setTile(tilePos.x, tilePos.y, Tiles.encode(getSurfaceHeight(tilePos), getSurfaceType(tilePos).id,
+                encodedTreeData));
     }
 
     /**
@@ -446,6 +381,88 @@ public class TileUtilities {
         if (treeTypeMycelium != null)
             return treeTypeMycelium;
         return null;
+    }
+
+    public static int getBushHarvestItemTemplateId(TilePos tilePos) {
+        BushData.BushType bushType = getBushType(tilePos);
+        if (bushType == null)
+            return -10;
+        switch (bushType) {
+            case LAVENDER: {
+                return 424;
+            }
+            case ROSE: {
+                return 426;
+            }
+            case GRAPE: {
+                if (tilePos.y > Zones.worldTileSizeY / 2) {
+                    return 411;
+                }
+                return 414;
+            }
+            case CAMELLIA: {
+                return 422;
+            }
+            case OLEANDER: {
+                return 423;
+            }
+            case HAZELNUT: {
+                return 134;
+            }
+            case RASPBERRY: {
+                return 1196;
+            }
+            case BLUEBERRY: {
+                return 364;
+            }
+            case LINGONBERRY: {
+                return 367;
+            }
+            default: {
+                return -10;
+            }
+        }
+    }
+
+    public static int getTreeHarvestItemTemplateId(TilePos tilePos) {
+        TreeData.TreeType treeType = getTreeType(tilePos);
+        if (treeType == null)
+            return -10;
+        switch (treeType) {
+            case MAPLE: {
+                return 416;
+            }
+            case APPLE: {
+                return 6;
+            }
+            case LEMON: {
+                return 410;
+            }
+            case OLIVE: {
+                return 412;
+            }
+            case CHERRY: {
+                return 409;
+            }
+            case CHESTNUT: {
+                return 833;
+            }
+            case WALNUT: {
+                return 832;
+            }
+            case PINE: {
+                return 1184;
+            }
+            case OAK: {
+                return 436;
+            }
+            case ORANGE: {
+                return 1283;
+            }
+            default: {
+                return -10;
+            }
+        }
     }
 
     //</editor-fold>
