@@ -1,20 +1,22 @@
 package com.joedobo27.libs.bytecode;
 
+import javassist.NotFoundException;
 import javassist.bytecode.*;
+import org.gotti.wurmunlimited.modloader.classhooks.HookManager;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 
-@SuppressWarnings({"unused", "UnusedReturnValue", "SameParameterValue"})
+@SuppressWarnings({"unused", "UnusedReturnValue", "SameParameterValue", "WeakerAccess"})
 public class BytecodeTools extends Bytecode {
 
     private static final Logger logger = Logger.getLogger(BytecodeTools.class.getName());
@@ -47,7 +49,7 @@ public class BytecodeTools extends Bytecode {
         return classReferenceIndex;
     }
 
-    int findMethodIndex(int opcode, String name, String descriptor, String className){
+    public int findMethodIndex(int opcode, String name, String descriptor, String className){
         int methodReferenceIndex;
         int classReferenceIndex = getClassReferenceIndex(className);
         if (classReferenceIndex == -1)
@@ -366,6 +368,39 @@ public class BytecodeTools extends Bytecode {
         return table.index(tableOrdinal);
     }
 
+    /**
+     * https://en.wikipedia.org/wiki/Java_bytecode_instruction_listings
+     * @param size how many bytes is the instruction.
+     * @param index where is the instruction at.
+     * @param codeIterator CodeIterator object that has all the bytecode.
+     * @return An encoded byte[] into long. [opcode][byte 1][byte 2]...[byte n]
+     */
+    public static long getBytecodeAtIndex(int size, int index, CodeIterator codeIterator) {
+        switch (size) {
+            case 1:
+                // Only a Opcode.
+                return codeIterator.byteAt(index);
+            case 2:
+                // An Opcode + 1 byte of additional information
+                return codeIterator.s16bitAt(index);
+            case 3:
+                // many of these: Opcode + 2 bytes of additional information
+                return (codeIterator.byteAt(index) << 8) + codeIterator.s16bitAt(index + 1);
+            case 4:
+                // few of these: multianewarray or in some cases wide.
+                return (codeIterator.s16bitAt(index) << 8) + codeIterator.s16bitAt(index + 2);
+            case 5:
+                // onl invokeinterface, invokedynamic, goto_w, jsr_w
+                return (codeIterator.byteAt(index) << 16) + codeIterator.s32bitAt(index + 1);
+            case 6:
+                // only a wide in some cases.
+                return (codeIterator.s16bitAt(index) << 8) + codeIterator.s32bitAt(index + 2);
+            default:
+                return 0L;
+        }
+        // there is tableswitch at 16+ size and lookupswitch at 8+ size. these likely need special treatment.
+    }
+
     private static int[] getInstruction(int size, int index, CodeIterator codeIterator) {
         int[] toReturn = null;
         int bitLine;
@@ -455,6 +490,39 @@ public class BytecodeTools extends Bytecode {
                 break;
         }
         return toReturn;
+    }
+
+    public static int getInsertLineAfterMethod(String classStringName, String[] parentMethod, int opcode, String[] insertMethod,
+                                               int indexOffset)
+            throws NotFoundException, BadBytecode {
+            List methods = HookManager.getInstance().getClassPool().get(classStringName).getClassFile()
+                    .getMethods();
+            MethodInfo methodInfo = IntStream.range(0, methods.size())
+                    .mapToObj(value -> (MethodInfo) methods.get(value))
+                    .filter(methodInfo1 -> Objects.equals(parentMethod[0], methodInfo1.getName()))
+                    .filter(methodInfo1 -> Objects.equals(parentMethod[1], methodInfo1.getDescriptor()))
+                    .findFirst()
+                    .orElseThrow(RuntimeException::new);
+            BytecodeTools bytecodeTools = new BytecodeTools(methodInfo.getConstPool());
+            int constPoolIndex = bytecodeTools.findMethodIndex(opcode, insertMethod[0], insertMethod[1], insertMethod[2]);
+            int bytecodeIndex = 0;
+            CodeIterator codeIterator = methodInfo.getCodeAttribute().iterator();
+            codeIterator.begin();
+            while (codeIterator.hasNext()) {
+                int index = codeIterator.next();
+                long bytecode = BytecodeTools.getBytecodeAtIndex(codeIterator.lookAhead() - index, index, codeIterator);
+                long checkBytecode = (opcode << 8) + constPoolIndex;
+                if (bytecode == checkBytecode) {
+                    bytecodeIndex = index;
+                }
+            }
+            LineNumberAttribute lineNumberAttribute = (LineNumberAttribute) methodInfo.getCodeAttribute().getAttribute(LineNumberAttribute.tag);
+            int lineNumber = lineNumberAttribute.toLineNumber(bytecodeIndex);
+            int tableIndex = IntStream.range(0, lineNumberAttribute.tableLength())
+                    .filter(value -> Objects.equals(lineNumberAttribute.lineNumber(value), lineNumber))
+                    .findFirst()
+                    .orElse(0);
+            return lineNumberAttribute.lineNumber(tableIndex + indexOffset);
     }
 
     public static void byteCodePrint(String destinationPath, CodeIterator codeIterator) throws FileNotFoundException, BadBytecode {
