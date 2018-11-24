@@ -106,10 +106,9 @@ public abstract class ActionMaster {
             time = Math.max(this.shortestTime, time * (1 - (this.action.getRarity() * ACTION_RARITY_EFFECT)));
 
         if (this.activeTool != null && this.activeTool.getSpellEffects() != null &&
-                this.activeTool.getSpellEffects().getRuneEffect() != -10L)
+                this.activeTool.getSpellEffects().getRuneEffect(RuneUtilities.ModifierEffect.ENCH_USESPEED) != -10L)
             time = Math.max(this.shortestTime, time * (1 -
-                    RuneUtilities.getModifier(this.activeTool.getSpellEffects().getRuneEffect(),
-                    RuneUtilities.ModifierEffect.ENCH_USESPEED)));
+                    this.activeTool.getSpellEffects().getRuneEffect(RuneUtilities.ModifierEffect.ENCH_USESPEED)));
 
         int timeInt = (int)time;
         if (this.action != null)
