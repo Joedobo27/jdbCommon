@@ -1,4 +1,4 @@
-package com.joedobo27.libs;
+package com.joedobo27.libs.bytecode;
 
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
 
 /**
  * Tooling class used with Javassist Bytecode objects.
- * @version 1
+ * @version 2
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ByteCodeWild {
@@ -21,7 +21,7 @@ public class ByteCodeWild {
      * Internal value used to track changes to this class.
      */
     @SuppressWarnings("unused")
-    private static int VERSION = 1;
+    private static int VERSION = 2;
 
     /**
      * A class's constPool.
@@ -163,6 +163,11 @@ public class ByteCodeWild {
         this.searchArrays.forEach(bytecode -> bytecode.addOpcode(code));
     }
 
+    public void addGetField(String className, String methodName, String descriptor) {
+        this.searchArrays.forEach(bytecode -> bytecode.addGetfield(className.replace("/", "."),
+                methodName, descriptor));
+    }
+
     public void trimFoundBytecode() throws RuntimeException{
         int pos = -1;
         int[] founds = new int[this.searchArrays.size()];
@@ -256,7 +261,7 @@ public class ByteCodeWild {
         throw new NotFoundException("code");
     }
 
-    int getTableLineNumberStart() throws RuntimeException{
+    public int getTableLineNumberStart() throws RuntimeException{
         // Get the line number table entry for the bytecodeIndex.
         LineNumberAttribute lineNumberAttribute = (LineNumberAttribute) this.codeAttribute
                 .getAttribute(LineNumberAttribute.tag);
@@ -268,7 +273,7 @@ public class ByteCodeWild {
         return startLineNumber;
     }
 
-    int getTableLineNumberAfter() throws RuntimeException{
+    public int getTableLineNumberAfter() throws RuntimeException{
         // Get the line number table entry for the bytecodeIndex.
         LineNumberAttribute lineNumberAttribute = (LineNumberAttribute) this.codeAttribute
                 .getAttribute(LineNumberAttribute.tag);
