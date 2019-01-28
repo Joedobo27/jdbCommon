@@ -1,0 +1,190 @@
+{
+  "$schema": "",
+  "$id": "",
+  "title": "item template",
+  "description": "A WU item template.",
+  "type": "object",
+  "properties": {
+    "id_factory_name": {
+      "description" : "Unique name to use with IdFactory.getIdFor(String, IdType) and get a new Id.",
+      "type": "string"
+    },
+    "size": {
+      "description" : "Size: tiny, small, normal, large, huge. WU templates without this are normal by default.",
+      "type": "string"
+    },
+    "name": {
+      "description" : "Name of item as displayed in game.",
+      "type": "string"
+    },
+    "plural_name": {
+      "description" : "Name for multiples of an item as displayed in game.",
+      "type": "string"
+    },
+    "item_description_superb" : {
+      "description" : "Not sure what this is for.",
+      "type": "string"
+    },
+    "item_description_normal" : {
+      "description" : "Not sure what this is for.",
+      "type": "string"
+    },
+    "item_description_bad" : {
+      "description" : "Not sure what this is for.",
+      "type": "string"
+    },
+    "item_description_rotten" : {
+      "description" : "Not sure what this is for.",
+      "type": "string"
+    },
+    "item_description_long" : {
+      "description" : "The examine text for in game item.",
+      "type": "string"
+    },
+    "item_types" : {
+      "description" : "Item types. com.joedobo27.libs.item.ItemTemplateType has named aliases. WU ItemTypes interface names work.",
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      },
+      "uniqueItems": true
+    },
+    "icon_number" : {
+      "description" : "A identifier to specify which client icon graphic.",
+      "type" : "integer"
+    },
+    "behaviour_type" : {
+      "description" : "See com.joedobo27.libs.item.BehaviourType for a list. This defines the fundamental behaviour for item template.",
+      "type" : "string"
+    },
+    "combat_damage" : {
+      "description" : "This is a relative damage value for a weapon. It is fed into a very complex combat system.",
+      "type" : "integer"
+    },
+    "decay_wurm_seconds" : {
+      "description" : "This determines how often an item is checked for decay and it's unit is wurm time seconds.",
+      "type" : "integer"
+    },
+    "dimensions_cm": {
+      "description" : "An item's x, y, z dimensions in centimeters.",
+      "type": "object",
+      "properties": {
+        "centimeters_x": {
+          "type": "integer"
+        },
+        "centimeters_y": {
+          "type": "integer"
+        },
+        "centimeters_z": {
+          "type": "integer"
+        }
+      },
+      "required": [ "centimeters_x", "centimeters_y", "centimeters_z" ]
+    },
+    "primary_skill" : {
+      "description" : "What skill is associated with this.",
+      "type" : "string"
+    },
+    "body_spaces" : {
+      "description" : "What body spaces does this item go on. see com.joedobo27.libs.item.BodyPart. Not even one creature has every body part.",
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      },
+      "uniqueItems": true
+    },
+    "model_Name" : {
+      "description" : "The path name to the 3d model in the client.",
+      "type" : "string"
+    },
+    "difficulty" : {
+      "description" : "A float number that gives a relative difficulty indicator. It's mostly use for creation and improvement.",
+      "type" : "number"
+    },
+    "weight_grams" : {
+      "description" : "The weight of an in-game item in gram units.",
+      "type" : "integer"
+    },
+    "material" : {
+      "description" : "A material. see list com.joedobo27.libs.item.Material. In WU this is represented with a byte number which is equal to Material.id field.",
+      "type" : "string"
+    },
+    "value" : {
+      "description" : "A relative value index used to tally in-game item value.",
+      "type" : "integer"
+    },
+    "is_traded" : {
+      "description" : "",
+      "type" : "boolean"
+    },
+    "dye_amount_override_grams" : {
+      "description" : "",
+      "type" : "integer"
+    },
+    "nutrition_values" : {
+      "description" : "CCFP values for the item.",
+      "type" : "object",
+      "properties" : {
+        "calories" : {
+          "type" : "integer"
+        },
+        "carbohydrates" : {
+          "type" : "integer"
+        },
+        "fats" : {
+          "type" : "integer"
+        },
+        "proteins" : {
+          "type" : "integer"
+        }
+      },
+      "required" : ["calories", "carbohydrates", "fats", "proteins"]
+    },
+    "food_group" : {
+      "description" : "Which item template any food group does this food go in.",
+      "type" : "string"
+    },
+    "crush_to" : {
+      "description" : "Which item template does this item becomes after being crushed.",
+      "type" : "string"
+
+    },
+    "pick_seeds" : {
+      "description" : "Which item template does this item becomes after being seed picked.",
+      "type" : "string"
+    },
+    "custom_container_size" : {
+      "description" : "Make a hollow item's container something different then its outside dimensions.",
+      "type" : "object",
+      "properties": {
+        "centimeters_x": {
+          "type": "integer"
+        },
+        "centimeters_y": {
+          "type": "integer"
+        },
+        "centimeters_z": {
+          "type": "integer"
+        }
+      },
+      "required": [ "centimeters_x", "centimeters_y", "centimeters_z" ]
+    },
+    "secondary_item" : {
+      "description" : "Used for things that can be dyed more then one colors.",
+      "type" : "string"
+    },
+    "grows_plant" : {
+      "description" : "Which item template does this item grow and it's used with pottery planter.",
+      "type" : "string"
+    },
+    "alcohol_strength" : {
+      "description" : "",
+      "type" : "integer"
+    },
+    "price_half_size" : {
+      "description" : "A scaling value used in tallying get price. It default to 100 for all but gems which are set here.",
+      "type" : "number"
+    }
+  },
+  "required" : ["id_factory_name", "name", "item_description_long", "icon_number", "behaviour_type", "dimensions_cm", "decay_wurm_seconds", "model_Name", "difficulty", "material"]
+}

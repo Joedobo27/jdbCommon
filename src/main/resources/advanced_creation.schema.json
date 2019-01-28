@@ -1,0 +1,81 @@
+{
+  "$schema": "",
+  "$id": "",
+  "title": "advanced creation",
+  "description" : "A WU advanced creation entry.",
+  "type": "object",
+  "properties": {
+    "id_factory_name" : {
+      "description" : "Unique name to use with IdFactory.getIdFor(String, IdType) and get a new Id.",
+      "type" : "string"
+    },
+    "skill" : {
+      "description" : "",
+      "type" : "string"
+    },
+    "source" : {
+      "description" : "The active item used for the initial step of an advanced creation. Note, the game lets you create with this or target item active.",
+      "type" : "string"
+    },
+    "target" : {
+      "description" : "the targeted item used for the initial step of an advanced creation. Note, the game lets you create with this or source item targeted.",
+      "type" : "string"
+    },
+    "destroy_target" : {
+      "description" : "Should both source and target be destroyed after initial create step? Set defualt to false.",
+      "type" : "boolean"
+    },
+    "use_capacity" : {
+      "description" : "This doesn't appear to do anything. Default is to false.",
+      "type" : "boolean"
+    },
+    "percentage_lost" : {
+      "description" : "Weight loss on failed creation attempts.",
+      "type" : "number"
+    },
+    "destroy_both" : {
+      "description" : "Both source and target item are destoryed in the initial creation action.",
+      "type" : "boolean"
+    },
+    "create_on_ground" : {
+      "description" : "The item is created on the ground instead of in the player's inventory.",
+      "type" : "boolean"
+    },
+    "custom_cut_off_chance" : {
+      "description" : "Not sure what this does. It's alwasy paired with things that have hardcap creation requirments.",
+      "type" : "integer"
+    },
+    "minimum_skill" : {
+      "description" : "The applicable skill must be at least equal to this make the item.",
+      "type" : "number"
+    },
+    "creation_categories" : {
+      "description" : "These are catagories for organizing creation options.",
+      "type" : "string"
+    },
+    "creation_requirements" : {
+      "description" : "",
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties": {
+          "order" : {
+            "type" : "integer"
+          },
+          "item" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "integer"
+          },
+          "consume" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : ["order", "item", "quantity"]
+      }
+    },
+    "required" : ["id_factory_name", "skill", "source", "target"]
+  },
+
+}

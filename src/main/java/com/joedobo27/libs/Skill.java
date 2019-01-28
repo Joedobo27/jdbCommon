@@ -1,5 +1,7 @@
 package com.joedobo27.libs;
 
+import org.json.JSONException;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -159,10 +161,18 @@ public enum Skill {
         return this.name().toLowerCase().replace("_", " ").replace("0", "-");
     }
 
-    public static Skill getFromString(String string) throws RuntimeException {
+    private static String formatName(String name) {
+        return name.toLowerCase()
+                .replaceAll("_", "")
+                .replaceAll(" ", "")
+                .replaceAll("'", "")
+                .replaceAll("-", "");
+    }
+
+    public static Skill getFromString(String skillName) throws JSONException {
         return Arrays.stream(values())
-                .filter(skill -> Objects.equals(skill.getName(), string))
+                .filter(skill -> Objects.equals(skill.getName(), skillName))
                 .findFirst()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new JSONException(String.format("skill %s is not a valid name.", formatName(skillName))));
     }
 }

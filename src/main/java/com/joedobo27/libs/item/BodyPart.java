@@ -1,7 +1,11 @@
 package com.joedobo27.libs.item;
 
+import com.joedobo27.libs.jdbCommon;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public enum BodyPart {
@@ -56,13 +60,27 @@ public enum BodyPart {
                 .replace("0", "-");
     }
 
-    public static BodyPart[] getFromStrings(String[] strings) throws RuntimeException{
-        BodyPart[] toReturn = new BodyPart[strings.length];
-        IntStream.range(0, strings.length)
-                .forEach(ordinal -> Arrays.stream(values())
-                        .filter(bodyPart -> Objects.equals(bodyPart.getName(), strings[ordinal]))
-                        .forEach(bodyPart -> toReturn[ordinal] = bodyPart));
-        return toReturn;
+    private static String formatName(String name) {
+        return name.toLowerCase()
+                .replaceAll("_", "")
+                .replaceAll(" ", "")
+                .replaceAll("'", "")
+                .replaceAll("-", "");
+    }
+
+    public static BodyPart[] getFromStrings(String[] partNames, String fileName) {
+        IntStream.range(0, partNames.length)
+                .filter(operand -> Arrays.stream(values())
+                        .noneMatch(bodyPart -> Objects.equals(bodyPart.getName(), formatName(partNames[operand]))))
+                .forEach(operand -> jdbCommon.logger.warning(String.format("Body part %s isn't valid for %s.",
+                        partNames[operand], fileName)));
+
+        ArrayList<BodyPart> bodyParts = Arrays.stream(values())
+                .filter(bodyPart1 -> IntStream.range(0, partNames.length)
+                        .anyMatch(operand -> Objects.equals(bodyPart1.getName(), formatName(partNames[operand]))))
+                .collect(Collectors.toCollection(ArrayList::new));
+        BodyPart[] toReturn = new BodyPart[bodyParts.size()];
+        return bodyParts.toArray(toReturn);
     }
 
     public static byte[] bodyPartsTobytes(BodyPart[] bodyParts) {

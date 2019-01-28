@@ -1,7 +1,11 @@
 package com.joedobo27.libs.item;
 
+import com.joedobo27.libs.jdbCommon;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public enum ItemTemplateType {
@@ -48,7 +52,6 @@ public enum ItemTemplateType {
     INDESTRUCTIBLE(40),
     KEY(41),
     NODROP(42),
-    DUST(43),
     REPAIRABLE(44),
     TEMPORARY(45),
     COMBINE(46),
@@ -112,7 +115,6 @@ public enum ItemTemplateType {
     HEALING_POWER_3(104),
     HEALING_POWER_4(105),
     HEALING_POWER_5(106),
-    HEALING(107),
     NAMED(108),
     ONE_PER_TILE(109),
     BED(110),
@@ -248,70 +250,73 @@ public enum ItemTemplateType {
     CAVE_PAVEABLE(243),
     DECORATION_WHEN_PLANTED(244),
     DESC_IS_NAME(245),
-    ANY_CEREAL_FOOD_GROUP(1157),
-    ANY_VEGGIE_FOOD_GROUP(1156),
-    ANY_CHEESE_FOOD_GROUP(1198),
-    ANY_MILK_FOOD_GROUP(1200),
-    ANY_MEAT_FOOD_GROUP(1261),
-    ANY_FISH_FOOD_GROUP(1201),
-    ANY_MUSHROOM_FOOD_GROUP(1199),
-    ANY_HERB_FOOD_GROUP(1158),
-    ANY_FLOWER_FOOD_GROUP(1267),
-    ANY_BERRY_FOOD_GROUP(1179),
-    ANY_NUT_FOOD_GROUP(1197),
-    ANY_FRUIT_FOOD_GROUP(1163),
-    ANY_SPICE_FOOD_GROUP(1159);
+    NOT_RUNEABLE(246),
+    SHOWS_SLOPES(247),
+    PLURAL_NAME(248),
+    SUPPORTS_SECONDARY_COLOR(249),
+    HAS_EXTRA_DATA(255),
+    VIEWABLE_SUBITEMS(256),
+    CREATES_WITH_LOCK(257),
+    BRACELET(258),
+    HOLLOW_VIEWABLE(259),;
 
-    private final short typeId;
+    private final short id;
 
-    ItemTemplateType(int typeId) {
-        this.typeId = (short)typeId;
+    ItemTemplateType(int id) {
+        this.id = (short) id;
     }
 
-    public short getTypeId() {
-        return typeId;
+    public short getId() {
+        return id;
     }
 
-    static private ItemTemplateType getTemplateTypeFromId(int id){
+    static private ItemTemplateType getFromId(int id){
         return Arrays.stream(values())
-                .filter(itemTemplateType -> itemTemplateType.typeId == id)
+                .filter(itemTemplateType -> itemTemplateType.id == id)
                 .findFirst()
                 .orElse(NONE);
     }
 
-    static ItemTemplateType[] buildTypes(int[] ids) {
-        return Arrays.stream(ids)
-                .mapToObj(ItemTemplateType::getTemplateTypeFromId)
-                .toArray(ItemTemplateType[]::new);
-    }
-
+    /**
+     * @return String formated so all lowercase, spaces removed, _ removed.
+     */
     public String getName() {
-        return this.name().toLowerCase().replace("_", " ")
-                .replace("0", "-");
+        return this.name().toLowerCase().replaceAll("_", "").replaceAll(" ", "");
     }
 
-    public static ItemTemplateType[] getFromStrings(String[] strings) throws RuntimeException{
-        ItemTemplateType[] toReturn = new ItemTemplateType[strings.length];
-        IntStream.range(0, strings.length)
-                .forEach(ordinal -> Arrays.stream(values())
-                        .filter(itemTemplateType -> Objects.equals(itemTemplateType.getName(), strings[ordinal]))
-                        .forEach(itemTemplateType -> toReturn[ordinal] = itemTemplateType));
-        return toReturn;
+    public String getNameAsCamelCase() {
+        return this.name().replaceAll("_(\\w)", "\\U$1")
+                .replaceAll(" (\\w)", "\\U$1");
+    }
+
+    public static ItemTemplateType[] getFromStrings(String[] names, String fileName) throws RuntimeException{
+       IntStream.range(0, names.length)
+               .filter(operand -> Arrays.stream(values())
+                       .noneMatch(itemTemplateType -> Objects.equals(itemTemplateType.getName(), formatName(names[operand]))))
+               .forEach(operand -> jdbCommon.logger.warning(String.format("Item template type %s isn't valid for %s.",
+                       names[operand], fileName)));
+
+        ArrayList<ItemTemplateType> itemTemplateTypes = Arrays.stream(values())
+                .filter(itemTemplateType -> IntStream.range(0, names.length)
+                                .anyMatch(operand -> Objects.equals(itemTemplateType.getName(), formatName(names[operand]))))
+                .collect(Collectors.toCollection(ArrayList::new));
+        ItemTemplateType[] toReturn = new ItemTemplateType[itemTemplateTypes.size()];
+        return itemTemplateTypes.toArray(toReturn);
+    }
+    
+    private static String formatName(String name) {
+        return name.toLowerCase()
+                .replaceAll("_", "")
+                .replaceAll(" ", "")
+                .replaceAll("'", "")
+                .replaceAll("-", "");
     }
 
     public static short[] ItemTypesToShorts(ItemTemplateType[] itemTemplateTypes) {
         short[] toReturn = new short[itemTemplateTypes.length];
         IntStream.range(0, itemTemplateTypes.length).forEach(
-                value -> toReturn[value] = itemTemplateTypes[value].getTypeId());
+                value -> toReturn[value] = itemTemplateTypes[value].getId());
         return toReturn;
-    }
-
-    public boolean isAnyFoodType() {
-        return this.equals(ANY_CEREAL_FOOD_GROUP) || this.equals(ANY_VEGGIE_FOOD_GROUP) || this.equals(ANY_CHEESE_FOOD_GROUP) ||
-                this.equals(ANY_MILK_FOOD_GROUP) || this.equals(ANY_MEAT_FOOD_GROUP) || this.equals(ANY_FISH_FOOD_GROUP) ||
-                this.equals(ANY_MUSHROOM_FOOD_GROUP) || this.equals(ANY_HERB_FOOD_GROUP) || this.equals(ANY_FLOWER_FOOD_GROUP) ||
-                this.equals(ANY_BERRY_FOOD_GROUP) || this.equals(ANY_NUT_FOOD_GROUP) || this.equals(ANY_FRUIT_FOOD_GROUP) ||
-                this.equals(ANY_SPICE_FOOD_GROUP);
     }
 
     public static ItemTemplateType[] EMPTY = new ItemTemplateType[0];

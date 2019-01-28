@@ -1,12 +1,12 @@
 package com.joedobo27.libs.item;
 
-import javax.json.JsonObject;
 import java.util.Arrays;
 import java.util.Objects;
 
 public enum ItemSize {
     TINY(1),
     SMALL(2),
+    NORMAL(3),
     LARGE(3),
     HUGE(4);
 
@@ -27,7 +27,7 @@ public enum ItemSize {
 
     static public ItemSize getFromString(String itemSize) throws RuntimeException{
         return Arrays.stream(values())
-                .filter(skill -> Objects.equals(skill.getName(), itemSize))
+                .filter(itemSize1 -> Objects.equals(itemSize1.getName(),itemSize.toLowerCase()))
                 .findFirst()
                 .orElseThrow(RuntimeException::new);
     }

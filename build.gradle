@@ -10,7 +10,7 @@ def WUServerPath = "C:\\Users\\Jason\\Documents\\WU\\WU-Server\\"
 
 repositories {
     mavenCentral()
-    mavenLocal()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -21,13 +21,17 @@ dependencies {
     compileOnly files("${WUServerPath}javassist.jar")
 
     // https://mvnrepository.com/artifact/junit/junit
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
     // https://mvnrepository.com/artifact/org.javassist/javassist
     //compileOnly group: 'org.javassist', name: 'javassist', version: '3.20.0-GA'
     // https://mvnrepository.com/artifact/com.intellij/annotations
-    compile group: 'com.intellij', name: 'annotations', version: '12.0'
-    // https://mvnrepository.com/artifact/org.glassfish/javax.json
-    compile group: 'org.glassfish', name: 'javax.json', version: '1.0.4'
+    implementation group: 'com.intellij', name: 'annotations', version: '12.0'
+    // https://jitpack.io/#everit-org/json-schema
+    //implementation 'com.github.everit-org:json-schema:1.10.0'
+    // https://mvnrepository.com/artifact/org.json/json
+    compile group: 'org.json', name: 'json', version: '20180813'
+
+
 }
 
 jar.setArchiveName(project.name + ".jar")
@@ -51,6 +55,10 @@ distributions {
         contents {
             from('src/main/resources/') {
                 include("*.properties")
+            }
+            from('src/main/resources/') {
+                include("*.schema.json")
+                into("${project.name}")
             }
             from ('build/libs/') {
                 include("${project.name}.jar")

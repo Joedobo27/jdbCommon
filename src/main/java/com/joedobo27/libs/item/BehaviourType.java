@@ -1,5 +1,7 @@
 package com.joedobo27.libs.item;
 
+import org.json.JSONException;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -78,10 +80,10 @@ public enum BehaviourType {
                 .replace("0", "-");
     }
 
-    static public BehaviourType getFromString(String itemSize) throws RuntimeException{
+    static public BehaviourType getFromString(String behaviourName) throws JSONException{
         return Arrays.stream(values())
-                .filter(behaviourType -> Objects.equals(behaviourType.getName().toLowerCase(), itemSize.toLowerCase()))
+                .filter(behaviourType -> Objects.equals(behaviourType.getName(), behaviourName.toLowerCase()))
                 .findFirst()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new JSONException(String.format("%s doesn't match any BehaviourType names.")));
     }
 }

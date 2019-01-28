@@ -102,15 +102,19 @@ public enum Material {
         this.id = (byte)id;
     }
 
-    public static Material getMaterialFromName(String name) {
+    public static Material getFromString(String name) {
         return Arrays.stream(values())
-                .filter(material -> Objects.equals(name, material.getName()))
+                .filter(material -> Objects.equals(name.toLowerCase(), material.getName()))
                 .findFirst()
-                .orElseThrow(RuntimeException::new);
+                .orElse(Material.NONE);
     }
 
-    String getName() {
-        return this.name().toLowerCase().replace("_", " ").replace("0", "-");
+    /**
+     * @return String formated so all lowercase, spaces removed, _ removed.
+     */
+    public String getName() {
+        return this.name().toLowerCase().replaceAll("_", "")
+                .replaceAll(" ", "");
     }
 
     public byte getId() {
