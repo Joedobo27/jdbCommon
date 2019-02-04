@@ -1,0 +1,165 @@
+{
+  "$schema": "",
+  "$id": "",
+  "title": "creature template",
+  "description": "A WU creature template.",
+  "type": "object",
+  "properties": {
+    "id_factory_name" : {
+      "description" : "Unique name to use with IdFactory.getIdFor(String, IdType) and get a new Id.",
+      "type" : "string"
+    },
+    "name" : {
+      "description" : "Name of item as displayed in game.",
+      "type" : "string"
+    },
+    "plural_name" : {
+      "description" : "Name for multiples of an item as displayed in game.",
+      "type" : "string"
+    },
+    "description_long" : {
+      "description" : "The examine text for in game item.",
+      "type" : "string"
+    },
+    "model_Name" : {
+      "description" : "The path name to the 3d model in the client.",
+      "type" : "string"
+    },
+    "creature_types" : {
+      "description" : "See com.joedobo27.libs.creature.CreatureTemplateType.",
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "body_type" : {
+      "description" : "See com.joedobo27.libs.creature.BodyType  The generaly body parts of a creature.",
+      "type" : "string"
+    },
+    "skills" : {
+      "description" : "com.joedobo27.libs.Skill    What skills does the creature have and at what level.",
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "skill_name" : {
+            "type" : "string"
+          },
+          "skill_level" : {
+            "type" : "number"
+          }
+        }
+      }
+    },
+    "vision_range" : {
+      "description" : "How far can the creature see.",
+      "type" : "string"
+    },
+    "npc_sex" : {
+      "descritpion" : "What gender is the creature tremplate. This can be overwritten when the actual creature is made.",
+      "type" : "string"
+    },
+    "creature_size" : {
+      "description" : "What are the dimentions of the creature. high, long, wide.",
+      "type" : "object",
+      "properties" : {
+        "centimeters_high" : {
+          "type" : "integer"
+        },
+        "centimeters_long" : {
+          "type" : "integer"
+        },
+        "centimeters_wide" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "death_sound_male" : {
+      "description" : "What sound does the creature make upon death.",
+      "type" : "string"
+    },
+    "death_sound_female" : {
+      "description" : "What sound does the creature make upon death.",
+      "type" : "string"
+    },
+    "hit_sound_male" : {
+      "description" : "What sound does the creature make when hit.",
+      "type" : "string"
+    },
+    "hit_sound_female" : {
+      "description" : "What sound does the creature make when hit.",
+      "type" : "string"
+    },
+    "natural_armor" : {
+      "description" : "What is the creatures natural armor.",
+      "type" : "number"
+    },
+    "hand_damage" : {
+      "description" : "What is the base damage done with hands.",
+      "type" : "number"
+    },
+    "kick_damage" : {
+      "descritpion" : "What is the base damage done with kick.",
+      "type" : "number"
+    },
+    "bite_damage" : {
+      "descritpion" : "What is the base damage done with bite.",
+      "type" : "number"
+    },
+    "head_damage" : {
+      "descritpion" : "What is the base damage done with head.",
+      "type" : "number"
+    },
+    "breath_damage" : {
+      "descritpion" : "What is the base damage done with breath.",
+      "type" : "number"
+    },
+    "speed" : {
+      "descritpion" : "What is base speed.",
+      "type" : "number"
+    },
+    "move_rate" : {
+      "descritpion" : "What does this do?",
+      "type" : "number"
+    },
+    "items_butchered" : {
+      "descritpion" : "",
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "max_hunt_distance" : {
+      "descritpion" : "",
+      "type" : "integer"
+    },
+    "aggressive" : {
+      "descritpion" : "",
+      "type" : "integer"
+    },
+    "meat_material" : {
+      "descritpion" : "",
+      "type" : "string"
+    },
+    "alignment" : {
+      "description" : "",
+      "type" : "number"
+    },
+    "base_combat_rating" : {
+      "descritpion" : "",
+      "type" : "number"
+    },
+    "damage_type" : {
+      "description" : "",
+      "type" : "string"
+    },
+    "is_no_skill_gain" : {
+      "description" : "",
+      "type" : "boolean"
+    },
+    "is_no_corpse" : {
+      "description" : "Does the creature have a corpse after it dies?"
+      "type" : "boolean"
+    }
+  }
+}
