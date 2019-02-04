@@ -1,6 +1,7 @@
 package com.joedobo27.libs.item;
 
 import com.joedobo27.libs.Skill;
+import com.joedobo27.libs.creature.BodyPart;
 import com.joedobo27.libs.jdbCommon;
 import com.wurmonline.server.items.ItemTemplate;
 import com.wurmonline.server.items.ItemTemplateFactory;

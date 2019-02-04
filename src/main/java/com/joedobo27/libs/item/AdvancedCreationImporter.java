@@ -90,13 +90,14 @@ public class AdvancedCreationImporter {
             return;
         }
 
-        try {
-            skill = Skill.getFromString(jsonObject.getString("skill"));
-        } catch (JSONException e) {
+
+        skill = Skill.getFromString(jsonObject.optString("skill", "none"));
+        if (skill == Skill.NONE) {
             jdbCommon.logger.warning(
                     String.format("skill isn't valid. Advanced creation %s won't be created.", fileName));
             return;
         }
+
 
         try {
             source = ItemTemplateJDB.getFromString(jsonObject.getString("source"));
@@ -129,12 +130,12 @@ public class AdvancedCreationImporter {
 
         minimumSkill = jsonObject.optDouble("minimum_skill", -1);
 
-
         creationCategories = Arrays.stream(CreationCategories.values())
                 .filter(creationCategories1 -> Objects.equals(creationCategories1.getCategoryName().toLowerCase(),
                         jsonObject.optString("creation_categories", "Unknown").toLowerCase()))
                 .findFirst()
                 .orElse(CreationCategories.UNKNOWN);
+
         JSONArray creation_equirements_a = jsonObject.optJSONArray("creation_requirements");
         if (creation_equirements_a != null) {
             creationRequirements = IntStream.range(0, creation_equirements_a.length())

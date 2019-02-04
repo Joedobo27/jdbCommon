@@ -1,4 +1,4 @@
-package com.joedobo27.libs;
+package com.joedobo27.libs.creature;
 
 import java.util.Arrays;
 import java.util.Objects;

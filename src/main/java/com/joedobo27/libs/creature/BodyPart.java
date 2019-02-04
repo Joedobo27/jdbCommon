@@ -1,4 +1,4 @@
-package com.joedobo27.libs.item;
+package com.joedobo27.libs.creature;
 
 import com.joedobo27.libs.jdbCommon;
 

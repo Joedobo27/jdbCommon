@@ -1,10 +1,14 @@
 package com.joedobo27.libs.item;
 
 
+import com.joedobo27.libs.jdbCommon;
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public enum ItemTemplateJDB {
 
@@ -1357,6 +1361,22 @@ public enum ItemTemplateJDB {
                 .orElseThrow(() -> new JSONException(""));
     }
 
+    public static ItemTemplateJDB[] getFromStrings(String[] templateNames, String fileName){
+        IntStream.range(0, templateNames.length)
+                .filter(operand -> Arrays.stream(values())
+                        .noneMatch(itemTemplateJDB -> Objects.equals(itemTemplateJDB.getName(),
+                                formatName(templateNames[operand]))))
+                .forEach(operand -> jdbCommon.logger.warning(String.format("Item template type %s isn't valid for %s.",
+                        templateNames[operand], fileName)));
+
+        ArrayList<ItemTemplateJDB> itemTemplateJDBS = Arrays.stream(values())
+                .filter(itemTemplateJDB -> IntStream.range(0, templateNames.length)
+                        .anyMatch(operand -> Objects.equals(itemTemplateJDB.getName(), formatName(templateNames[operand]))))
+                .collect(Collectors.toCollection(ArrayList::new));
+        ItemTemplateJDB[] toReturn = new ItemTemplateJDB[itemTemplateJDBS.size()];
+        return itemTemplateJDBS.toArray(toReturn);
+    }
+
     public int getId() {
         return id;
     }
@@ -1392,6 +1412,12 @@ public enum ItemTemplateJDB {
                 .map(itemTemplate -> itemTemplate.id)
                 .findFirst()
                 .orElse(NONE.id);
+    }
+
+    public static int[] templatesToInts(ItemTemplateJDB[] templates) {
+        int[] toReturn = new int[templates.length];
+        IntStream.range(0, templates.length).forEach(value -> toReturn[value] = templates[value].getId());
+        return toReturn;
     }
 }
 

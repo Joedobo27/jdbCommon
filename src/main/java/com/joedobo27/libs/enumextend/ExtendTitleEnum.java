@@ -188,7 +188,8 @@ class ExtendTitleEnum {
      * @throws ClassNotFoundException forwarded, JA stuff.
      * @throws NotFoundException forwarded, JA stuff.
      */
-    public synchronized void ExtendEnumEntries() throws BadBytecode, ClassNotFoundException, NotFoundException, CannotCompileException {
+    public synchronized void ExtendEnumEntries() throws BadBytecode, ClassNotFoundException, NotFoundException,
+            CannotCompileException {
         createFieldsInEnum();
         CtClass ctClassEnum = HookManager.getInstance().getClassPool().get(this.className);
         CodeIterator initiatorCodeIterator = ctClassEnum.getClassInitializer().getMethodInfo().getCodeAttribute().iterator();

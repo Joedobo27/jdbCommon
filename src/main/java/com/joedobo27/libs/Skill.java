@@ -157,7 +157,7 @@ public enum Skill {
         return id;
     }
 
-    String getName() {
+    public String getName() {
         return this.name().toLowerCase().replace("_", " ").replace("0", "-");
     }
 
@@ -169,10 +169,10 @@ public enum Skill {
                 .replaceAll("-", "");
     }
 
-    public static Skill getFromString(String skillName) throws JSONException {
+    public static Skill getFromString(String skillName) {
         return Arrays.stream(values())
                 .filter(skill -> Objects.equals(skill.getName(), skillName))
                 .findFirst()
-                .orElseThrow(() -> new JSONException(String.format("skill %s is not a valid name.", formatName(skillName))));
+                .orElse(NONE);
     }
 }
